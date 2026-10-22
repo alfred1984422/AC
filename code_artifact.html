@@ -1,0 +1,2760 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高二數學：數字排列組合互動教學與闖關實驗室</title>
+    <style>
+        /* ==========================================================================
+           1. 核心設計系統與 CSS 變數（100% 原生 CSS，零外部 CDN 依賴）
+           ========================================================================== */
+        :root {
+            --base-font-size: 19px;
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-accent-soft: #eef2ff;
+            --bg-amber-soft: #fffbeb;
+            --bg-emerald-soft: #ecfdf5;
+            --bg-rose-soft: #fff1f2;
+            --bg-dark-box: #0f172a;
+
+            --text-main: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --text-on-dark: #f8fafc;
+
+            --primary: #4338ca;
+            --primary-hover: #3730a3;
+            --primary-light: #6366f1;
+            --amber: #d97706;
+            --amber-bright: #f59e0b;
+            --emerald: #059669;
+            --rose: #e11d48;
+            --purple: #7c3aed;
+
+            --border-color: #cbd5e1;
+            --border-subtle: #e2e8f0;
+            --border-primary: #a5b4fc;
+
+            --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.1);
+            --shadow-lg: 0 16px 32px -6px rgba(67, 56, 202, 0.18);
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 26px;
+        }
+
+        html.dark {
+            --bg-body: #090d16;
+            --bg-surface: #111827;
+            --bg-subtle: #1e293b;
+            --bg-accent-soft: #1e1b4b;
+            --bg-amber-soft: #2e1f05;
+            --bg-emerald-soft: #062e22;
+            --bg-rose-soft: #310b19;
+            --bg-dark-box: #030712;
+
+            --text-main: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --primary-light: #a5b4fc;
+            --amber: #fbbf24;
+            --emerald: #34d399;
+            --rose: #fb7185;
+            --purple: #c084fc;
+
+            --border-color: #334155;
+            --border-subtle: #1e293b;
+            --border-primary: #4338ca;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: var(--base-font-size);
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.75;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        button, input {
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* ==========================================================================
+           2. 專屬大字清晰數學符號樣式 (.math-notation, .supsz, .math-frac)
+           ========================================================================== */
+        .math-notation {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+            font-size: 1.35em;
+            font-weight: 900;
+            color: var(--primary);
+            background-color: var(--bg-accent-soft);
+            padding: 0.05em 0.32em;
+            margin: 0 0.15em;
+            border-radius: 8px;
+            border: 1px solid var(--border-primary);
+            line-height: 1.1;
+        }
+
+        .math-notation.comb {
+            color: var(--emerald);
+            background-color: var(--bg-emerald-soft);
+            border-color: var(--emerald);
+        }
+
+        .math-notation .supsz {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 0.68em;
+            line-height: 1.05;
+            margin-left: 0.15em;
+            text-align: left;
+            font-weight: 800;
+        }
+
+        .math-notation .supsz .sup {
+            color: var(--amber);
+            display: block;
+        }
+
+        .math-notation .supsz .sub {
+            color: var(--text-main);
+            display: block;
+        }
+
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0.15em 0.35em;
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-size: 1.1em;
+            font-weight: 800;
+        }
+
+        .math-frac .frac-num {
+            border-bottom: 2.5px solid currentColor;
+            padding: 0 0.4em 0.15em;
+            line-height: 1.25;
+        }
+
+        .math-frac .frac-den {
+            padding: 0.15em 0.4em 0;
+            line-height: 1.25;
+        }
+
+        code.num-badge {
+            font-family: "JetBrains Mono", "Consolas", monospace;
+            font-weight: 800;
+            background-color: var(--bg-subtle);
+            color: var(--primary);
+            padding: 0.1em 0.45em;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* ==========================================================================
+           3. 頂部導航欄與字體控制列
+           ========================================================================== */
+        .app-header {
+            background-color: #0f172a;
+            color: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 3px solid #4f46e5;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .header-container {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 0.75rem 1.25rem;
+        }
+
+        .header-top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-icon {
+            width: 2.8rem;
+            height: 2.8rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-eye {
+            background-color: #fbbf24;
+            color: #0f172a;
+            font-size: 0.8rem;
+            font-weight: 900;
+            padding: 0.15rem 0.65rem;
+            border-radius: 999px;
+        }
+
+        .accessibility-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.45rem;
+            background-color: #1e293b;
+            padding: 0.4rem 0.65rem;
+            border-radius: 14px;
+            border: 1px solid #475569;
+        }
+
+        .acc-label {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #fcd34d;
+            margin-right: 0.25rem;
+        }
+
+        .font-btn {
+            background-color: #334155;
+            color: #e2e8f0;
+            border: 1px solid transparent;
+            padding: 0.35rem 0.75rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .font-btn:hover {
+            background-color: #475569;
+            color: #fff;
+        }
+
+        .font-btn.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+            border-color: #a5b4fc;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.5);
+        }
+
+        .theme-btn {
+            background-color: rgba(251, 191, 36, 0.15);
+            color: #fde68a;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            padding: 0.35rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .theme-btn:hover {
+            background-color: rgba(251, 191, 36, 0.28);
+        }
+
+        .header-nav-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding-top: 0.75rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .nav-tab-btn {
+            background-color: transparent;
+            color: #cbd5e1;
+            border: 2px solid transparent;
+            padding: 0.55rem 1.05rem;
+            border-radius: 12px;
+            font-size: 0.98rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .nav-tab-btn:hover {
+            background-color: #1e293b;
+            color: #ffffff;
+        }
+
+        .nav-tab-btn.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+            border-color: #818cf8;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .progress-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            background-color: #1e293b;
+            padding: 0.4rem 0.9rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fde68a;
+        }
+
+        .progress-track {
+            width: 90px;
+            height: 10px;
+            background-color: #334155;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24, #34d399);
+            width: 0%;
+            transition: width 0.35s ease;
+        }
+
+        /* ==========================================================================
+           4. 主容器與通用版面配置
+           ========================================================================== */
+        .main-container {
+            max-width: 1360px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.75rem 1.25rem 3rem;
+            flex-grow: 1;
+        }
+
+        .module-section {
+            display: none;
+        }
+
+        .module-section.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 60%, #0f172a 100%);
+            color: #ffffff;
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid rgba(129, 140, 248, 0.35);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .hero-content {
+            max-width: 820px;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background-color: #fbbf24;
+            color: #0f172a;
+            font-weight: 900;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.85rem;
+            border-radius: 999px;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-title {
+            font-size: 1.65rem;
+            font-weight: 900;
+            line-height: 1.35;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-desc {
+            color: #e0e7ff;
+            font-size: 1.05rem;
+            line-height: 1.75;
+        }
+
+        .hero-highlight {
+            background-color: rgba(255, 255, 255, 0.18);
+            color: #fde68a;
+            padding: 0.1rem 0.45rem;
+            border-radius: 6px;
+            font-weight: 800;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-width: 240px;
+        }
+
+        .btn-primary-amber {
+            background-color: #fbbf24;
+            color: #0f172a;
+            font-weight: 900;
+            padding: 0.85rem 1.35rem;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(251, 191, 36, 0.35);
+        }
+
+        .btn-primary-amber:hover {
+            background-color: #fcd34d;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-light {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font-weight: 800;
+            padding: 0.8rem 1.35rem;
+            border-radius: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.22);
+        }
+
+        .surface-card {
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            margin-bottom: 1.35rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-subtle);
+        }
+
+        .section-title {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+            font-size: 1rem;
+        }
+
+        /* ==========================================================================
+           5. 模組一：六大破題秘笈與三大防坑指南樣式
+           ========================================================================== */
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .strategy-btn-card {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.15rem 1.25rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.6rem;
+        }
+
+        .strategy-btn-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .strategy-btn-card.active {
+            background-color: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .strategy-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .strategy-badge {
+            font-size: 0.85rem;
+            font-weight: 900;
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+            background-color: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+        }
+
+        .strategy-btn-card.active .strategy-badge {
+            background-color: #fbbf24;
+            color: #0f172a;
+        }
+
+        .strategy-card-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+        }
+
+        .strategy-card-sub {
+            font-size: 0.92rem;
+            opacity: 0.85;
+        }
+
+        .strategy-detail-box {
+            background-color: var(--bg-subtle);
+            border: 2px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            padding: 1.65rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .info-panel {
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-panel.warning {
+            background-color: var(--bg-amber-soft);
+            border-color: var(--amber);
+        }
+
+        .info-panel-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .info-panel.warning .info-panel-title {
+            color: var(--amber);
+        }
+
+        .pitfalls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .pitfall-card {
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .pitfall-header {
+            display: inline-block;
+            font-weight: 900;
+            padding: 0.3rem 0.85rem;
+            border-radius: 10px;
+            background-color: var(--bg-rose-soft);
+            color: var(--rose);
+            border: 1px solid var(--rose);
+            align-self: flex-start;
+        }
+
+        .box-wrong {
+            background-color: var(--bg-rose-soft);
+            border: 2px solid var(--rose);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+
+        .box-right {
+            background-color: var(--bg-emerald-soft);
+            border: 2px solid var(--emerald);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+
+        /* ==========================================================================
+           6. 模組二：互動數位填格實驗室 (Interactive Slot Visualizer)
+           ========================================================================== */
+        .scenario-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .scenario-btn {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 800;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .scenario-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .scenario-btn.active {
+            background-color: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .lab-control-banner {
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            color: #ffffff;
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 2px solid #4f46e5;
+        }
+
+        .lab-banner-top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+        }
+
+        .lab-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .ctrl-btn {
+            padding: 0.65rem 1.1rem;
+            border-radius: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn-secondary {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+
+        .ctrl-btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.28);
+        }
+
+        .ctrl-btn-amber {
+            background-color: #fbbf24;
+            color: #0f172a;
+        }
+
+        .ctrl-btn-amber:hover:not(:disabled) {
+            background-color: #fcd34d;
+        }
+
+        .ctrl-btn-emerald {
+            background-color: #10b981;
+            color: #052e16;
+        }
+
+        .ctrl-btn-emerald:hover {
+            background-color: #34d399;
+        }
+
+        .case-switch-bar {
+            margin-top: 1.1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .lab-workspace {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .lab-workspace {
+                grid-template-columns: 7fr 5fr;
+            }
+        }
+
+        .digit-pool-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 1rem;
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-top: 0.6rem;
+        }
+
+        .digit-ball {
+            padding: 0.45rem 1.05rem;
+            border-radius: 12px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.35rem;
+            font-weight: 900;
+            background-color: var(--bg-accent-soft);
+            color: var(--primary);
+            border: 2px solid var(--border-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .digit-ball.zero-ball {
+            background-color: var(--bg-rose-soft);
+            color: var(--rose);
+            border-color: var(--rose);
+        }
+
+        .slots-stage {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+            gap: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        .slot-box {
+            background-color: var(--bg-surface);
+            border: 2.5px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.15rem;
+            min-height: 215px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .slot-box.done-step {
+            border-style: solid;
+            border-color: var(--emerald);
+            background-color: var(--bg-emerald-soft);
+        }
+
+        .slot-box.current-step {
+            border-style: solid;
+            border-color: var(--primary);
+            background-color: var(--primary);
+            color: #ffffff;
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .slot-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+            font-weight: 900;
+        }
+
+        .slot-step-tag {
+            font-size: 0.82rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+            background-color: var(--bg-subtle);
+            color: var(--text-secondary);
+        }
+
+        .slot-box.current-step .slot-step-tag {
+            background-color: #fbbf24;
+            color: #0f172a;
+        }
+
+        .slot-box.done-step .slot-step-tag {
+            background-color: var(--emerald);
+            color: #ffffff;
+        }
+
+        .slot-main-val {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.75rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 0.75rem 0 0.35rem;
+        }
+
+        .slot-candidates {
+            font-size: 0.88rem;
+            font-weight: 800;
+            text-align: center;
+            padding: 0.2rem 0.4rem;
+            border-radius: 6px;
+            background-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .slot-box.current-step .slot-candidates {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fde68a;
+        }
+
+        .slot-note {
+            font-size: 0.88rem;
+            line-height: 1.45;
+            padding-top: 0.65rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .sample-verifier-box {
+            background-color: var(--bg-dark-box);
+            color: #f8fafc;
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            border: 2px solid #334155;
+            margin-top: 1rem;
+        }
+
+        .sample-number-badge {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.65rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            color: #34d399;
+            background-color: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            padding: 0.35rem 1rem;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .step-exp-card {
+            background-color: var(--bg-subtle);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            margin-bottom: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .step-exp-card.active {
+            background-color: var(--bg-accent-soft);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .step-exp-card.done {
+            border-color: var(--emerald);
+        }
+
+        .formula-summary-box {
+            background-color: var(--bg-amber-soft);
+            border: 2.5px solid var(--amber);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+            text-align: center;
+        }
+
+        /* ==========================================================================
+           7. 模組三：真實數字全枚舉驗證器 & 算籌與條形碼圖解
+           ========================================================================== */
+        .enum-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .enum-layout {
+                grid-template-columns: 7fr 5fr;
+            }
+        }
+
+        .enum-grid-display {
+            background-color: var(--bg-dark-box);
+            color: #e2e8f0;
+            border-radius: var(--radius-lg);
+            padding: 1.35rem;
+            border: 2px solid #334155;
+            max-height: 540px;
+            overflow-y: auto;
+        }
+
+        .enum-items-wrap {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 0.65rem;
+        }
+
+        .enum-num-chip {
+            background-color: #1e293b;
+            border: 1.5px solid #475569;
+            border-radius: 10px;
+            padding: 0.5rem 0.6rem;
+            text-align: center;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+        }
+
+        /* 算籌視覺化元件 */
+        .rod-card {
+            background-color: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 14px;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rod-digits-pair {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            background-color: #0f172a;
+            padding: 0.6rem 0.9rem;
+            border-radius: 10px;
+            border: 1px solid #334155;
+        }
+
+        .rod-glyph {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 46px;
+        }
+
+        .rod-bar-h {
+            width: 28px;
+            height: 4px;
+            background-color: #fbbf24;
+            margin: 2px 0;
+            border-radius: 2px;
+        }
+
+        .rod-bar-v {
+            width: 4px;
+            height: 18px;
+            background-color: #38bdf8;
+            border-radius: 2px;
+        }
+
+        /* 條形碼視覺化元件 */
+        .barcode-card {
+            background-color: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 14px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .barcode-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background-color: #ffffff;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            height: 58px;
+        }
+
+        .bar-wide {
+            width: 14px;
+            height: 40px;
+            background-color: #0f172a;
+            border-radius: 2px;
+        }
+
+        .bar-narrow {
+            width: 5px;
+            height: 40px;
+            background-color: #475569;
+            border-radius: 1px;
+        }
+
+        /* ==========================================================================
+           8. 模組四：教材真題闖關題庫 (15 道精選原題)
+           ========================================================================== */
+        .filter-pills-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 2px solid var(--border-subtle);
+        }
+
+        .filter-pill {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            padding: 0.55rem 1.05rem;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-pill.active {
+            background-color: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .question-card {
+            background-color: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 1.65rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.2s ease;
+        }
+
+        .question-card.correct-card {
+            border-color: var(--emerald);
+        }
+
+        .question-card.wrong-card {
+            border-color: var(--rose);
+        }
+
+        .q-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .q-tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .q-num-badge {
+            background-color: var(--primary);
+            color: #ffffff;
+            font-weight: 900;
+            padding: 0.2rem 0.75rem;
+            border-radius: 8px;
+        }
+
+        .q-source-badge {
+            background-color: var(--bg-subtle);
+            color: var(--text-secondary);
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .q-stars {
+            color: var(--amber-bright);
+            font-weight: 900;
+            letter-spacing: 0.05em;
+        }
+
+        .q-stem {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 1.25rem;
+            line-height: 1.75;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .option-btn {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.9rem 1.15rem;
+            text-align: left;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background-color: var(--bg-accent-soft);
+        }
+
+        .option-btn.opt-correct {
+            background-color: var(--bg-emerald-soft);
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        .option-btn.opt-wrong {
+            background-color: var(--bg-rose-soft);
+            border-color: var(--rose);
+            color: var(--rose);
+        }
+
+        .opt-letter {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 8px;
+            background-color: var(--bg-surface);
+            border: 1.5px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .q-Hint-box {
+            background-color: var(--bg-amber-soft);
+            border: 2px solid var(--amber);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            margin-top: 0.85rem;
+            display: none;
+        }
+
+        .q-Hint-box.show {
+            display: block;
+        }
+
+        .q-solution-box {
+            background-color: var(--bg-emerald-soft);
+            border: 2px solid var(--emerald);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .q-solution-box.show {
+            display: block;
+        }
+
+        .input-number {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-surface);
+            color: var(--text-main);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .app-footer {
+            background-color: var(--bg-surface);
+            border-top: 2px solid var(--border-color);
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 頂部導航欄與字體大小切換器 ==================== -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-top">
+                <div class="brand-group">
+                    <div class="brand-icon">A<sub style="font-size:0.55em">n</sub></div>
+                    <div class="brand-title">
+                        <span>高二數學：數字排列組合互動教學與闖關實驗室</span>
+                        <span class="badge-eye">零警告・大字護眼版</span>
+                    </div>
+                </div>
+
+                <!-- 字體大小即時切換與深淺色護眼模式 -->
+                <div class="accessibility-bar" role="region" aria-label="字體大小與護眼設定">
+                    <span class="acc-label">🔍 字體大小：</span>
+                    <button type="button" onclick="changeFontSize(19, 'fbtn-19')" id="fbtn-19" class="font-btn active">標準 (19px)</button>
+                    <button type="button" onclick="changeFontSize(21, 'fbtn-21')" id="fbtn-21" class="font-btn">大字 (21px)</button>
+                    <button type="button" onclick="changeFontSize(24, 'fbtn-24')" id="fbtn-24" class="font-btn">特大 (24px)</button>
+                    <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="theme-btn">🌙 深色護眼</button>
+                </div>
+            </div>
+
+            <!-- 四大核心教學模組切換導航 -->
+            <div class="header-nav-row">
+                <nav class="nav-tabs" aria-label="主要學習模組">
+                    <button type="button" onclick="switchModule('mod-concepts')" id="tab-mod-concepts" class="nav-tab-btn active">
+                        📘 模組一：六大破題秘笈與防坑指南
+                    </button>
+                    <button type="button" onclick="switchModule('mod-lab')" id="tab-mod-lab" class="nav-tab-btn">
+                        🧪 模組二：互動數位填格實驗室 (7題)
+                    </button>
+                    <button type="button" onclick="switchModule('mod-enum')" id="tab-mod-enum" class="nav-tab-btn">
+                        🔎 模組三：真實數字全枚舉驗證器
+                    </button>
+                    <button type="button" onclick="switchModule('mod-quiz')" id="tab-mod-quiz" class="nav-tab-btn">
+                        🏆 模組四：教材真題闖關題庫 (15題)
+                    </button>
+                </nav>
+
+                <div class="progress-pill">
+                    <span id="quiz-progress-label">闖關進度：0 / 15 題</span>
+                    <div class="progress-track">
+                        <div id="quiz-progress-bar" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== 主內容容器 ==================== -->
+    <main class="main-container">
+
+        <!-- ======================================================================
+             模組一：六大破題秘笈與三大防坑指南
+             ====================================================================== -->
+        <section id="mod-concepts" class="module-section active">
+            <div class="hero-banner">
+                <div class="hero-content">
+                    <span class="hero-tag">💡 高二排列組合核心思維</span>
+                    <h2 class="hero-title">為什麼「數字排列」題目總是容易漏算或重複算？</h2>
+                    <p class="hero-desc">
+                        在高中排列組合中，數字排列是月考與學測最常出現的題型。只要在動筆前先檢查三個關鍵問題：
+                        <span class="hero-highlight">① 有沒有特殊數字 0（首位不能為 0）？</span>、
+                        <span class="hero-highlight">② 個位有無奇偶或倍數限制？</span>、
+                        <span class="hero-highlight">③ 有沒有重複相同的數字需要消序？</span>，就能避開所有陷阱！
+                    </p>
+                </div>
+                <div class="hero-actions">
+                    <button type="button" onclick="switchModule('mod-lab')" class="btn-primary-amber">
+                        ▶ 進入互動數位填格實驗室
+                    </button>
+                    <button type="button" onclick="switchModule('mod-quiz')" class="btn-outline-light">
+                        📝 挑戰 15 道講義原題闖關
+                    </button>
+                </div>
+            </div>
+
+            <!-- 六大破題秘笈互動切換卡 -->
+            <div class="surface-card">
+                <div class="section-header">
+                    <h3 class="section-title">🧭 六大破題秘笈（點擊下方任一秘笈卡片切換完整圖解公式）</h3>
+                    <p class="section-subtitle">完整歸納上傳講義《第4講：排列組合常見11種題型》與《專題09：排列組合與二項式定理》核心方法：</p>
+                </div>
+
+                <div id="strategy-cards-grid" class="strategy-grid">
+                    <!-- 由 JavaScript 動態渲染 6 張卡片 -->
+                </div>
+
+                <div id="strategy-detail-container" class="strategy-detail-box">
+                    <!-- 由 JavaScript 動態注入選中秘笈的詳細步驟與公式 -->
+                </div>
+            </div>
+
+            <!-- 三大月考必考防坑指南 -->
+            <div class="surface-card">
+                <div class="section-header">
+                    <h3 class="section-title">⚠️ 高二月考「三大必考地雷」正誤對照表</h3>
+                    <p class="section-subtitle">把講義中最容易扣分的三大陷阱直接攤開對比，考前必看：</p>
+                </div>
+
+                <div class="pitfalls-grid">
+                    <!-- 地雷 1 -->
+                    <div class="pitfall-card">
+                        <div>
+                            <span class="pitfall-header">💣 地雷一：排偶數時「含 0 未分類」</span>
+                            <p style="font-weight:800; margin: 0.85rem 0;">
+                                題目：用 <code class="num-badge">0, 2, 4, 5, 6, 8</code> 組成無重複數字的四位偶數。
+                            </p>
+                            <div class="box-wrong">
+                                <div style="font-weight:900; color:var(--rose); margin-bottom:0.3rem;">❌ 錯誤直覺寫法：</div>
+                                <p>直接寫「個位 5 選 1，千位 5 選 1」會出錯！因為當個位選 <code class="num-badge">0</code> 時，千位有 5 種選擇；當個位選 <code class="num-badge">2,4,6,8</code> 時，千位不能為 0 只有 4 種選擇！</p>
+                            </div>
+                        </div>
+                        <div class="box-right">
+                            <div style="font-weight:900; color:var(--emerald); margin-bottom:0.3rem;">✅ 正確標準解法：</div>
+                            <p>必須分兩類相加：<strong>① 個位是 0</strong> 有 <span id="pitfall-math-1a"></span> 個；<strong>② 個位不是 0</strong> 有 <span id="pitfall-math-1b"></span> 個，合計 <strong>60 + 192 = 252</strong> 個！</p>
+                        </div>
+                    </div>
+
+                    <!-- 地雷 2 -->
+                    <div class="pitfall-card">
+                        <div>
+                            <span class="pitfall-header">💣 地雷二：相同數字忘記「除以階乘消序」</span>
+                            <p style="font-weight:800; margin: 0.85rem 0;">
+                                題目：排圓周率 <code class="num-badge">3, 1, 4, 1, 5, 9</code> 或世界讀書日 <code class="num-badge">2, 0, 2, 5, 4, 2, 3</code>。
+                            </p>
+                            <div class="box-wrong">
+                                <div style="font-weight:900; color:var(--rose); margin-bottom:0.3rem;">❌ 錯誤直覺寫法：</div>
+                                <p>把兩個相同的 1 插入 5 個空隙誤用排列數；或將含三個 2 的七位數直接算全排列而忘記除以重複數字的階乘。</p>
+                            </div>
+                        </div>
+                        <div class="box-right">
+                            <div style="font-weight:900; color:var(--emerald); margin-bottom:0.3rem;">✅ 正確標準解法：</div>
+                            <p>相同數字交換位置仍是同一個數！兩個相同 1 插 5 空隙用組合 <span id="pitfall-math-2a"></span>；含三個相同 2 的全排列必除以 <span id="pitfall-math-2b"></span> 消序！</p>
+                        </div>
+                    </div>
+
+                    <!-- 地雷 3 -->
+                    <div class="pitfall-card">
+                        <div>
+                            <span class="pitfall-header">💣 地雷三：雙面卡片或對數底真數隱藏重複</span>
+                            <p style="font-weight:800; margin: 0.85rem 0;">
+                                題目：4 張卡片正反面為 <code class="num-badge">(1,2) (1,3) (4,5) (6,7)</code> 排四位數。
+                            </p>
+                            <div class="box-wrong">
+                                <div style="font-weight:900; color:var(--rose); margin-bottom:0.3rem;">❌ 錯誤直覺寫法：</div>
+                                <p>沒注意到第 1、2 張卡片正面都是數字 <strong>1</strong>！若直接用 2<sup>4</sup> × 24 = 384，會在同時翻出兩個 1 時多算一倍！</p>
+                            </div>
+                        </div>
+                        <div class="box-right">
+                            <div style="font-weight:900; color:var(--emerald); margin-bottom:0.3rem;">✅ 正確標準解法：</div>
+                            <p>按出現 1 的個數分三類：<strong>不出現 1</strong>（96種）＋ <strong>出現一個 1</strong>（192種）＋ <strong>出現兩個 1 消序</strong>（48種）＝ <strong>336</strong> 個！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             模組二：互動數位填格實驗室 (Interactive Slot Visualizer)
+             ====================================================================== -->
+        <section id="mod-lab" class="module-section">
+            <div class="surface-card">
+                <div class="section-header">
+                    <h3 class="section-title">🧪 互動數位填格實驗室（Interactive Slot Visualizer）</h3>
+                    <p class="section-subtitle">點擊下方 7 道講義經典題目切換，逐步觀察「先排哪一格、為什麼這樣排、剩餘哪些候選數字」：</p>
+                    <div id="lab-scenario-grid" class="scenario-btn-grid">
+                        <!-- 由 JS 生成 7 個題目切換按鈕 -->
+                    </div>
+                </div>
+
+                <!-- 實驗室控制橫幅 -->
+                <div class="lab-control-banner">
+                    <div class="lab-banner-top">
+                        <div style="max-width: 780px;">
+                            <span id="lab-source-badge" class="hero-tag" style="margin-bottom:0.4rem;">題型一</span>
+                            <h4 id="lab-question-title" style="font-size:1.35rem; font-weight:900; margin-bottom:0.4rem;"></h4>
+                            <p id="lab-question-desc" style="color:#e0e7ff;"></p>
+                        </div>
+                        <div class="lab-btn-group">
+                            <button type="button" onclick="labStepPrev()" id="btn-lab-prev" class="ctrl-btn ctrl-btn-secondary">⏮ 上一步</button>
+                            <button type="button" onclick="labStepNext()" id="btn-lab-next" class="ctrl-btn ctrl-btn-amber">下一步推導 ⏭</button>
+                            <button type="button" onclick="labStepAll()" class="ctrl-btn ctrl-btn-emerald">⏬ 全部展開</button>
+                            <button type="button" onclick="labStepReset()" class="ctrl-btn ctrl-btn-secondary">↺ 重置</button>
+                        </div>
+                    </div>
+
+                    <!-- 當題目有分類一/分類二時顯示的切換列 -->
+                    <div id="lab-case-bar" class="case-switch-bar" style="display:none;"></div>
+                </div>
+
+                <!-- 左右雙欄互動舞台 -->
+                <div class="lab-workspace">
+                    <!-- 左欄：數字池 + 數位格子 + 隨機抽樣驗證 -->
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                            <strong style="font-size:1.08rem;">🎯 題目可用數字元素池：</strong>
+                            <span id="lab-pool-note" style="font-weight:800; color:var(--primary);"></span>
+                        </div>
+                        <div id="lab-digit-pool" class="digit-pool-box"></div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:1.35rem;">
+                            <strong style="font-size:1.08rem;">🔢 數位填格順序舞台（點擊任一格可跳至該步驟）：</strong>
+                            <span id="lab-step-badge" class="q-num-badge">第 1 步</span>
+                        </div>
+                        <div id="lab-slots-stage" class="slots-stage"></div>
+
+                        <!-- 隨機生成一組真實合法數字驗證 -->
+                        <div class="sample-verifier-box">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.85rem;">
+                                <strong style="color:#fde68a;">🎲 隨機抽出一組符合本題條件的真實數字驗證：</strong>
+                                <button type="button" onclick="generateLabSample()" class="ctrl-btn ctrl-btn-amber" style="padding:0.4rem 0.95rem; font-size:0.92rem;">
+                                    🔄 再隨機生成一組
+                                </button>
+                            </div>
+                            <div id="lab-sample-display" style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 右欄：分步詳解與最終算式 -->
+                    <div style="background-color:var(--bg-subtle); border:2px solid var(--border-color); border-radius:var(--radius-xl); padding:1.4rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:2px solid var(--border-color);">
+                            <h4 style="font-size:1.2rem; font-weight:900;">👩‍🏫 分步邏輯推導詳解</h4>
+                            <span id="lab-method-tag" class="q-source-badge" style="background-color:var(--bg-emerald-soft); color:var(--emerald); border-color:var(--emerald);"></span>
+                        </div>
+
+                        <div id="lab-steps-list"></div>
+
+                        <div class="formula-summary-box">
+                            <div style="font-weight:900; color:var(--amber); margin-bottom:0.5rem;">📊 本題完整計數公式與答案：</div>
+                            <div id="lab-formula-box" style="font-size:1.25rem; font-weight:900; background-color:var(--bg-surface); padding:0.9rem; border-radius:12px; border:2px solid var(--border-color);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             模組三：眼見為憑「真實數字全枚舉驗證器」
+             ====================================================================== -->
+        <section id="mod-enum" class="module-section">
+            <div class="enum-layout">
+                <!-- 左側：5 大經典題型全枚舉展示 -->
+                <div class="surface-card" style="margin-bottom:0;">
+                    <div class="section-header">
+                        <h3 class="section-title">🔎 眼見為憑：真實數字與圖形全枚舉驗證器</h3>
+                        <p class="section-subtitle">覺得公式算出的答案很抽象？點擊下方 5 個講義經典題目，直接列出所有符合條件的真實數字與視覺圖示：</p>
+                        <div class="scenario-btn-grid" style="margin-top:1rem;">
+                            <button type="button" onclick="selectEnumPreset('odd36')" id="ebtn-odd36" class="scenario-btn active">
+                                ① 0,1,2,3,4 五位奇數 (全部 36 個)
+                            </button>
+                            <button type="button" onclick="selectEnumPreset('mult20')" id="ebtn-mult20" class="scenario-btn">
+                                ② 0,1,2,3,4 三位3的倍數 (全部 20 個)
+                            </button>
+                            <button type="button" onclick="selectEnumPreset('rods16')" id="ebtn-rods16" class="scenario-btn">
+                                ③ 6根算籌表示的兩位數 (16個+算籌圖)
+                            </button>
+                            <button type="button" onclick="selectEnumPreset('perm24')" id="ebtn-perm24" class="scenario-btn">
+                                ④ 1,2,3,4 無重複四位數 (全部 24 個)
+                            </button>
+                            <button type="button" onclick="selectEnumPreset('barcode10')" id="ebtn-barcode10" class="scenario-btn">
+                                ⑤ 條形碼 2寬3窄編碼 (10種視覺條碼圖)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 子篩選器與說明頭 -->
+                    <div id="enum-header-box" class="info-panel" style="background-color:var(--bg-accent-soft); border-color:var(--border-primary);"></div>
+
+                    <!-- 全枚舉網格區 -->
+                    <div id="enum-stage-box" class="enum-grid-display"></div>
+                </div>
+
+                <!-- 右側：互動排列組合公式展開計算機 -->
+                <div class="surface-card" style="margin-bottom:0;">
+                    <div class="section-header">
+                        <h3 class="section-title">🧮 排列數與組合數展開計算機</h3>
+                        <p class="section-subtitle">輸入總數 n 與取出數 m，即時觀察連乘展開式、階乘消序與對稱性質：</p>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+                        <div>
+                            <label for="calc-input-n" style="display:block; font-weight:900; margin-bottom:0.4rem;">總元素個數 n (1 ~ 12)：</label>
+                            <input type="number" id="calc-input-n" class="input-number" value="5" min="1" max="12" oninput="updateFormulaCalculator()">
+                        </div>
+                        <div>
+                            <label for="calc-input-m" style="display:block; font-weight:900; margin-bottom:0.4rem;">取出個數 m (0 ~ n)：</label>
+                            <input type="number" id="calc-input-m" class="input-number" value="3" min="0" max="12" oninput="updateFormulaCalculator()">
+                        </div>
+                    </div>
+
+                    <div id="calculator-result-area"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================
+             模組四：教材真題闖關題庫（精選15道講義原題）
+             ====================================================================== -->
+        <section id="mod-quiz" class="module-section">
+            <div class="surface-card">
+                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;">
+                    <div>
+                        <h3 class="section-title">🏆 教材真題闖關題庫（精選 15 道講義原題）</h3>
+                        <p class="section-subtitle">每題均附「查看破題提示」與完整分步公式詳解，答錯題目可一鍵篩選重練！</p>
+                    </div>
+                    <button type="button" onclick="resetAllQuiz()" class="ctrl-btn" style="background-color:var(--bg-rose-soft); color:var(--rose); border-color:var(--rose);">
+                        🗑️ 清空重置作答紀錄
+                    </button>
+                </div>
+
+                <!-- 題型分類與錯題篩選列 -->
+                <div class="filter-pills-bar" id="quiz-filter-bar">
+                    <button type="button" onclick="setQuizFilter('all')" data-qfilter="all" class="filter-pill active">全部真題 (15)</button>
+                    <button type="button" onclick="setQuizFilter('special')" data-qfilter="special" class="filter-pill">① 特殊位置與分類討論 (6)</button>
+                    <button type="button" onclick="setQuizFilter('gap')" data-qfilter="gap" class="filter-pill">② 插空法與消序倍縮 (4)</button>
+                    <button type="button" onclick="setQuizFilter('indirect')" data-qfilter="indirect" class="filter-pill">③ 正難則反與雙面卡片/隔板 (5)</button>
+                    <button type="button" onclick="setQuizFilter('wrong')" data-qfilter="wrong" id="filter-btn-wrong" class="filter-pill" style="color:var(--rose);">📕 錯題重練 (0)</button>
+                </div>
+            </div>
+
+            <div id="quiz-questions-container">
+                <!-- 由 JS 渲染 15 道題目卡片 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== 頁尾 ==================== -->
+    <footer class="app-footer">
+        高二數學「數字排列組合」互動自學實驗室 ｜ 100% 純原生 CSS 大字無障礙設計・離線零警告運行
+    </footer>
+
+    <!-- ==================== 核心 JavaScript 邏輯 ==================== -->
+    <script>
+        // =========================================================================
+        // 1. 數學符號 HTML 產生器 (.math-notation & .supsz)
+        // =========================================================================
+        function symA(n, m) {
+            return `<span class="math-notation">A<span class="supsz"><span class="sup">${m}</span><span class="sub">${n}</span></span></span>`;
+        }
+
+        function symC(n, m) {
+            return `<span class="math-notation comb">C<span class="supsz"><span class="sup">${m}</span><span class="sub">${n}</span></span></span>`;
+        }
+
+        function symFrac(numHtml, denHtml) {
+            return `<span class="math-frac"><span class="frac-num">${numHtml}</span><span class="frac-den">${denHtml}</span></span>`;
+        }
+
+        function factorial(n) {
+            if (n <= 1) return 1;
+            let r = 1;
+            for (let i = 2; i <= n; i++) r *= i;
+            return r;
+        }
+
+        function valA(n, m) {
+            if (m < 0 || m > n) return 0;
+            let r = 1;
+            for (let i = 0; i < m; i++) r *= (n - i);
+            return r;
+        }
+
+        function valC(n, m) {
+            if (m < 0 || m > n) return 0;
+            return Math.round(valA(n, m) / factorial(m));
+        }
+
+        // =========================================================================
+        // 2. 字體大小與深淺主題控制
+        // =========================================================================
+        function changeFontSize(px, btnId) {
+            document.documentElement.style.setProperty('--base-font-size', px + 'px');
+            document.querySelectorAll('.font-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === btnId);
+            });
+            try {
+                localStorage.setItem('perm_lab_fontsize', px);
+                localStorage.setItem('perm_lab_fontbtn', btnId);
+            } catch (e) {}
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            const btn = document.getElementById('theme-toggle-btn');
+            btn.textContent = isDark ? '☀️ 淺色護眼' : '🌙 深色護眼';
+            try {
+                localStorage.setItem('perm_lab_dark', isDark ? '1' : '0');
+            } catch (e) {}
+        }
+
+        function switchModule(modId) {
+            document.querySelectorAll('.module-section').forEach(sec => {
+                sec.classList.toggle('active', sec.id === modId);
+            });
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === 'tab-' + modId);
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =========================================================================
+        // 3. 模組一：六大破題秘笈資料與渲染
+        // =========================================================================
+        const strategiesList = [
+            {
+                badge: '秘笈 01',
+                title: '特殊位置與特殊元素優先法',
+                sub: '首位不為 0、奇偶數先看個位',
+                principle: '對於有附加條件的數字排列問題，永遠<strong>先排限制最嚴格的特殊位置（個位、首位）</strong>，最後再排沒有特殊限制的中間位置，利用分步乘法計數原理相乘。',
+                exampleHtml: `
+                    <strong>📖 【講義例4(4)】用 <code class="num-badge">0, 1, 2, 3, 4</code> 組成無重複五位奇數：</strong><br>
+                    ① <strong>先排個位</strong>（奇數只能放 1 或 3）：有 ${symC(2,1)} = 2 種情況；<br>
+                    ② <strong>再排萬位</strong>（不能放 0，且扣除個位已用的 1 個奇數，剩 3 個可選）：有 ${symC(3,1)} = 3 種情況；<br>
+                    ③ <strong>最後排中間三位</strong>（0 解禁！剩餘 3 個數字任意全排列）：有 ${symA(3,3)} = 6 種情況。<br>
+                    👉 共有 ${symC(2,1)} × ${symC(3,1)} × ${symA(3,3)} = <strong>2 × 3 × 6 = 36</strong> 個五位奇數。
+                `,
+                warning: '千萬不能先排萬位！若先排萬位（從 1,2,3,4 選一），當萬位選到偶數 2,4 時個位有 2 種奇數可選，但當萬位選到奇數 1,3 時個位只剩 1 種奇數可選，會導致後續步驟無法直接相乘！',
+                labIdx: 1
+            },
+            {
+                badge: '秘笈 02',
+                title: '分類討論思想',
+                sub: '0 在末位 vs 非末位、3的倍數、算籌',
+                principle: '當特殊數字 <code class="num-badge">0</code> 同時受到「首位不能為 0」與「偶數個位可以是 0」雙重牽制時，必須分成<strong>「第一類：個位是 0」</strong>與<strong>「第二類：個位不是 0」</strong>兩類，再由分類加法原理相加。',
+                exampleHtml: `
+                    <strong>📖 【講義專練4】用 <code class="num-badge">0, 2, 4, 5, 6, 8</code> 組無重複四位偶數：</strong><br>
+                    • <strong>第一類（個位是 0）</strong>：千百十位從剩餘 5 數選 3 排列，有 ${symA(5,3)} = <strong>60</strong> 個；<br>
+                    • <strong>第二類（個位不是 0）</strong>：個位從 {2,4,6,8} 選 1 (${symC(4,1)})，千位避開 0 (${symC(4,1)})，中間兩位 (${symA(4,2)})，有 4×4×12 = <strong>192</strong> 個；合计 <strong>60 + 192 = 252</strong> 個。<br>
+                    • <strong>【3的倍數】</strong>數位和須為3的倍數，0~4可選出 {0,1,2}(4個)、{0,2,4}(4個)、{1,2,3}(6個)、{2,3,4}(6個) 共 <strong>20</strong> 個。<br>
+                    • <strong>【6根算籌】</strong>可組成 {15,19,24,28,64,68,37}(各2個=14) 與 {33,77}(各1個=2)，共 <strong>16</strong> 個兩位數。
+                `,
+                warning: '分類討論的核心原則是「不重不漏」：每一類內部用乘法（分步完成），不同類之間用加法（分類相加）。',
+                labIdx: 2
+            },
+            {
+                badge: '秘笈 03',
+                title: '插空法（數字不相鄰問題）',
+                sub: '先排其他數字，再將不相鄰元素插入空隙',
+                principle: '要求某幾個數字「不相鄰」時，先將沒有不相鄰限制的 n 個數字排好，這 n 個數字之間連同頭尾兩端會形成 <strong>(n + 1) 個空隙</strong>，再將不相鄰的數字插入空隙中。',
+                exampleHtml: `
+                    <strong>📖 【講義題型三例2】將圓周率前 6 位 <code class="num-badge">3, 1, 4, 1, 5, 9</code> 排列設密碼，要求兩個 1 不相鄰：</strong><br>
+                    ① <strong>先排其餘 4 個相異數字 {3, 4, 5, 9}</strong>：共有 ${symA(4,4)} = 24 種排法；<br>
+                    ② <strong>形成 5 個空隙插入兩個相同的 1</strong>：4 個數排好後形成 <code class="num-badge">_ X _ X _ X _ X _</code> 共 5 個空位，因兩個 1 完全相同無順序之分，選 2 個空位放入即可，有 ${symC(5,2)} = 10 種。<br>
+                    👉 共有 ${symA(4,4)} × ${symC(5,2)} = <strong>24 × 10 = 240</strong> 個不同密碼。
+                `,
+                warning: '區分清楚插入的元素是否相同：若插入的是不同數字（如 1 與 2 不相鄰）要用排列數 A；若插入的是相同數字（如兩個 1 或三個 0 不相鄰）則用組合數 C！',
+                labIdx: 3
+            },
+            {
+                badge: '秘笈 04',
+                title: '定序與相同數字消序法（倍縮法）',
+                sub: '含重複數字排列，除以重複個數階乘',
+                principle: '當 n 個數字中含有 k 個完全相同的數字時，相同數字內部互換不會產生新數字，因此總排列數必須除以 <span class="math-notation">A<span class="supsz"><span class="sup">k</span><span class="sub">k</span></span></span>（即 k!）進行消序。',
+                exampleHtml: `
+                    <strong>📖 【專題09第33題】將 <code class="num-badge">2, 0, 2, 5, 4, 2, 3</code> 排成七位數（數字 2 出現 3 次）：</strong><br>
+                    • 7 個數字任意消序全排列 － 首位為 0 的消序排列 = ${symFrac(symA(7,7), symA(3,3))} － ${symFrac(symA(6,6), symA(3,3))} = <strong>840 － 120 = 720</strong> 個。<br><br>
+                    <strong>📖 【題型八專練5】三個 0、兩個 2、兩個 1、一個 7 組八位數，三個 0 均不相鄰：</strong><br>
+                    • 先排 5 個非零數 {2,2,1,1,7} 有 ${symFrac(symA(5,5), symA(2,2)+symA(2,2))} = 30 種；再把三個 0 插入後面 5 個空隙（首位空隙不可放 0）有 ${symC(5,3)} = 10 種，共 <strong>30 × 10 = 300</strong> 個。
+                `,
+                warning: '當「三個 0 不相鄰」在排八位數時，5 個非零數雖然有頭尾共 6 個空隙，但最左邊第一個空隙是八位數的首位，不能放 0，所以只能從後面 5 個空隙選 3 個！',
+                labIdx: 4
+            },
+            {
+                badge: '秘笈 05',
+                title: '正難則反與容斥原理',
+                sub: '總數減去反面不合情況、對數與直線去重',
+                principle: '當題目正面限制條件較多（如「三個奇數僅有兩個相鄰」或「兩組數字同時不相鄰」）時，改算<strong>「總排列數 － 反面不合條件數」</strong>最為迅速！',
+                exampleHtml: `
+                    <strong>📖 【題型七例1】用 <code class="num-badge">1, 2, 3, 4, 5</code> 組五位數，三個奇數中「僅有兩個相鄰」：</strong><br>
+                    • 總數 ${symA(5,5)} = 120 個；反面是「三個奇數全相鄰（捆綁法 ${symA(3,3)}${symA(3,3)} = 36）」或「三個奇數全不相鄰（插空法 ${symA(2,2)}${symA(3,3)} = 12）」；故有 <strong>120 － 36 － 12 = 72</strong> 個。<br><br>
+                    <strong>📖 【題型七專練4】用 <code class="num-badge">1,2,3,4,5,0</code> 組六位數，1,2 不相鄰且 5,0 不相鄰：</strong><br>
+                    • 容斥原理：六位數總數(600) － 1,2相鄰(192) － 5,0相鄰(216) ＋ 雙相鄰(84) = <strong>276</strong> 個。<br>
+                    • <strong>【去重問題】</strong>從 {2,4,6,8,10} 取兩數算 lg a - lg b，因 2/4=4/8 且 4/2=8/4，故為 ${symA(5,2)} － 2 = <strong>18</strong> 個。
+                `,
+                warning: '在對數值或直線方程 Ax+By=0 題目中，務必先按排列算出總數，再檢查是否有成比例的數對（如 1:2 與 2:4，或 log₂3 = log₄9）並將重複次數減去！',
+                labIdx: 6
+            },
+            {
+                badge: '秘笈 06',
+                title: '雙面卡片與方程正整數解隔板法',
+                sub: '卡片先選正反面再排列、不定方程插隔板',
+                principle: '雙面卡片問題需先觀察「不同卡片之間有無相同數字」；而求方程 <code class="num-badge">x₁ + x₂ + ... + xₖ = n</code> 的正整數解組數，等價於將 n 個相同球用 (k - 1) 塊隔板分成 k 份，直接套用隔板法公式 <span class="math-notation comb">C<span class="supsz"><span class="sup">k-1</span><span class="sub">n-1</span></span></span>。',
+                exampleHtml: `
+                    <strong>📖 【專題09第9題】3 張卡片正反面寫有 (1,2)、(3,4)、(5,6) 排三位數：</strong><br>
+                    • 數字完全不重複：每張卡片選正或反面有 2<sup>3</sup> = 8 種，再將 3 個數全排有 ${symA(3,3)} = 6 種，共 <strong>8 × 6 = 48</strong> 個。<br><br>
+                    <strong>📖 【題型一專練3】4 張卡片 (1,2)、(1,3)、(4,5)、(6,7) 排四位數：</strong><br>
+                    • 按 1 的個數分三類：不出現1 (${symC(2,1)}${symC(2,1)}${symA(4,4)}=96) ＋ 出現一個1 (2×${symC(2,1)}${symC(2,1)}${symA(4,4)}=192) ＋ 出現兩個1 (${symC(2,1)}${symC(2,1)}${symA(4,2)}=48) = <strong>336</strong> 個。<br><br>
+                    <strong>📖 【專題09第28題】三元一次方程 x + y + z = 8 的正整數解組數：</strong><br>
+                    • 等價於 8 個相同球中間 7 個空隙插 2 塊隔板，共有 ${symC(7,2)} = <strong>21</strong> 組。
+                `,
+                warning: '隔板法公式 C(n-1, k-1) 的前提是每個未知數皆為「正整數（≥ 1）」。',
+                labIdx: 0
+            }
+        ];
+
+        let currentStrategyIdx = 0;
+
+        function renderStrategiesModule() {
+            const grid = document.getElementById('strategy-cards-grid');
+            grid.innerHTML = strategiesList.map((s, i) => `
+                <button type="button" onclick="selectStrategyCard(${i})" class="strategy-btn-card ${i === currentStrategyIdx ? 'active' : ''}">
+                    <div class="strategy-card-top">
+                        <span class="strategy-badge">${s.badge}</span>
+                        <span style="font-weight:900;">點擊查看 ➔</span>
+                    </div>
+                    <div>
+                        <div class="strategy-card-title">${s.title}</div>
+                        <div class="strategy-card-sub">${s.sub}</div>
+                    </div>
+                </button>
+            `).join('');
+
+            const cur = strategiesList[currentStrategyIdx];
+            const detailBox = document.getElementById('strategy-detail-container');
+            detailBox.innerHTML = `
+                <div>
+                    <div style="margin-bottom:0.85rem;">
+                        <span class="q-num-badge">${cur.badge}</span>
+                        <strong style="font-size:1.3rem; margin-left:0.5rem;">${cur.title}</strong>
+                    </div>
+                    <div class="info-panel">
+                        <div class="info-panel-title">🎯 核心破題法則：</div>
+                        <p>${cur.principle}</p>
+                    </div>
+                    <div class="info-panel warning" style="margin-bottom:0;">
+                        <div class="info-panel-title">⚠️ 考場防坑提醒：</div>
+                        <p>${cur.warning}</p>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div class="info-panel" style="flex-grow:1;">
+                        <div class="info-panel-title">📐 講義真題完整公式拆解：</div>
+                        <div style="line-height:1.9;">${cur.exampleHtml}</div>
+                    </div>
+                    <button type="button" onclick="openLabWithScenario(${cur.labIdx})" class="btn-primary-amber" style="width:100%;">
+                        🧪 前往「互動數位填格實驗室」演練此題型
+                    </button>
+                </div>
+            `;
+
+            // 填入三大防坑指南中的數學符號
+            document.getElementById('pitfall-math-1a').innerHTML = `${symA(5,3)} = 60`;
+            document.getElementById('pitfall-math-1b').innerHTML = `${symC(4,1)}${symC(4,1)}${symA(4,2)} = 192`;
+            document.getElementById('pitfall-math-2a').innerHTML = `${symC(5,2)} = 10`;
+            document.getElementById('pitfall-math-2b').innerHTML = `${symA(3,3)} = 6`;
+        }
+
+        function selectStrategyCard(idx) {
+            currentStrategyIdx = idx;
+            renderStrategiesModule();
+        }
+
+        function openLabWithScenario(labIdx) {
+            switchModule('mod-lab');
+            selectLabScenario(labIdx);
+        }
+
+        // =========================================================================
+        // 4. 模組二：互動數位填格實驗室（7 大講義經典題目）
+        // =========================================================================
+        const labScenariosData = [
+            {
+                btnTitle: '(1) 0,1,2,3,4 無重複五位數 (96個)',
+                source: '第4講・題型一【例4(1)(2)】',
+                title: '用 0, 1, 2, 3, 4 五個數字，可組成多少個無重複數字的五位數？（附可重複對比）',
+                desc: '萬位（首位）不能放 0，因此必須最優先排萬位！點擊下方切換按鈕可比較「無重複(96個)」與「可重複(2500個)」的差異。',
+                method: '特殊位置優先法',
+                pool: ['0', '1', '2', '3', '4'],
+                poolNote: '特殊數字 0 不能排在萬位（首位）',
+                cases: [
+                    {
+                        name: '無重複數字五位數 (96個)',
+                        slots: [
+                            { pos: '萬位 (首位)', step: 1, val: '4 種', cands: '1, 2, 3, 4', note: '第1步優先排！0不能放萬位，從1~4選1個' },
+                            { pos: '千位', step: 2, val: '4 種', cands: '0 + 剩餘3數', note: '第2步：0解禁加入！與剩餘3數共4選1' },
+                            { pos: '百位', step: 2, val: '3 種', cands: '剩餘3數', note: '第2步：不可重複，從剩餘3數選1個' },
+                            { pos: '十位', step: 2, val: '2 種', cands: '剩餘2數', note: '第2步：從剩餘2數選1個' },
+                            { pos: '個位', step: 2, val: '1 種', cands: '最後1數', note: '第2步：填入最後剩下的1個數字' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：優先排「萬位」（首位不能為 0）', text: `從 <code class="num-badge">1, 2, 3, 4</code> 四個非零數字中抽取 1 個放在萬位，有 ${symC(4,1)} = 4 種情況。` },
+                            { s: 2, title: '第二步：將剩下的 3 個數與 0 在後四位全排列', text: `0 可以放在千、百、十、個位，把剩下的 3 個數字和 0 共 4 個數字全排列，有 ${symA(4,4)} = 24 種情況。` }
+                        ],
+                        formula: `${symC(4,1)} × ${symA(4,4)} = 4 × 24 = <span style="color:var(--primary)">96</span> 個`
+                    },
+                    {
+                        name: '可重複數字五位數 (2500個)',
+                        slots: [
+                            { pos: '萬位 (首位)', step: 1, val: '4 種', cands: '1, 2, 3, 4', note: '第1步：萬位不能為0，從1~4中選1個' },
+                            { pos: '千位', step: 2, val: '5 種', cands: '0, 1, 2, 3, 4', note: '第2步：數字可重複，0~4五個數皆可選' },
+                            { pos: '百位', step: 2, val: '5 種', cands: '0, 1, 2, 3, 4', note: '第2步：數字可重複，0~4五個數皆可選' },
+                            { pos: '十位', step: 2, val: '5 種', cands: '0, 1, 2, 3, 4', note: '第2步：數字可重複，0~4五個數皆可選' },
+                            { pos: '個位', step: 2, val: '5 種', cands: '0, 1, 2, 3, 4', note: '第2步：數字可重複，0~4五個數皆可選' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：先排「萬位」（避開 0）', text: `從 <code class="num-badge">1, 2, 3, 4</code> 抽取 1 個放在萬位，有 ${symC(4,1)} = 4 種情況。` },
+                            { s: 2, title: '第二步：千、百、十、個位皆可從 5 個數任選', text: `因為允許重複，後四個位置每個位置都有 ${symC(5,1)} = 5 種情況，共 4 × 5<sup>4</sup> = 2500 個。` }
+                        ],
+                        formula: `${symC(4,1)} × 5<sup>4</sup> = 4 × 625 = <span style="color:var(--primary)">2500</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const digits = ['0', '1', '2', '3', '4'];
+                    const first = ['1', '2', '3', '4'][Math.floor(Math.random() * 4)];
+                    const rest = digits.filter(d => d !== first).sort(() => Math.random() - 0.5);
+                    return { num: first + rest.join(''), desc: `萬位選非零數 ${first}，後四位由剩餘 {${rest.join(',')}} 全排` };
+                }
+            },
+            {
+                btnTitle: '(2) 0,1,2,3,4 無重複五位奇數 (36個)',
+                source: '第4講・題型一【例4(4)】',
+                title: '用 0, 1, 2, 3, 4 五個數字，可組成多少個無重複數字的五位奇數？',
+                desc: '同時有「個位必須是奇數」與「萬位不能是 0」兩個限制，務必遵循「①先排個位 ➔ ②再排萬位 ➔ ③最後排中間三位」的黃金順序！',
+                method: '雙特殊位置優先法',
+                pool: ['0', '1', '2', '3', '4'],
+                poolNote: '奇數：{1, 3} ｜ 偶數：{0, 2, 4}',
+                cases: [
+                    {
+                        name: '標準三步推導',
+                        slots: [
+                            { pos: '萬位 (首位)', step: 2, val: '3 種', cands: '非0且非個位', note: '第2步排！扣除0與個位奇數，剩3個數可選' },
+                            { pos: '千位', step: 3, val: '3 種', cands: '0 + 剩餘2數', note: '第3步排！0解禁放入中間三位，剩3選1' },
+                            { pos: '百位', step: 3, val: '2 種', cands: '剩餘2數', note: '第3步排！剩2選1' },
+                            { pos: '十位', step: 3, val: '1 種', cands: '最後1數', note: '第3步排！剩最後1數' },
+                            { pos: '個位 (末位)', step: 1, val: '2 種', cands: '1 或 3', note: '第1步最優先！奇數只能放 1 或 3' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：最優先排「個位」（決定奇數）', text: `五位奇數的個位只能是 1 或 3，從 <code class="num-badge">1, 3</code> 中抽取 1 個放在個位，有 ${symC(2,1)} = 2 種情況。` },
+                            { s: 2, title: '第二步：次優先排「萬位」（不能為 0）', text: `從剩下的 4 個數字中除去 0，抽取 1 個放在萬位，有 ${symC(3,1)} = 3 種情況。` },
+                            { s: 3, title: '第三步：中間三位（千、百、十位）全排列', text: `對剩下的 3 個數字（包含 0）進行全排列，有 ${symA(3,3)} = 6 種情況。` }
+                        ],
+                        formula: `${symC(2,1)} × ${symC(3,1)} × ${symA(3,3)} = 2 × 3 × 6 = <span style="color:var(--primary)">36</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const last = ['1', '3'][Math.floor(Math.random() * 2)];
+                    const firstPool = ['1', '2', '3', '4'].filter(d => d !== last);
+                    const first = firstPool[Math.floor(Math.random() * firstPool.length)];
+                    const mid = ['0', '1', '2', '3', '4'].filter(d => d !== last && d !== first).sort(() => Math.random() - 0.5);
+                    return { num: first + mid.join('') + last, desc: `①個位填奇數 ${last} ➔ ②萬位填非零 ${first} ➔ ③中間排 ${mid.join('')}` };
+                }
+            },
+            {
+                btnTitle: '(3) 0,2,4,5,6,8 四位偶數 (252個)',
+                source: '第4講・題型一【專練4】',
+                title: '用 0, 2, 4, 5, 6, 8 組成無重複數字的四位數，其中偶數共有多少個？',
+                desc: '因為 0 既是偶數（可放個位）又不能放千位，必須分成「第一類：個位是 0 (60個)」與「第二類：個位不是 0 (192個)」兩類相加！請點擊下方分類按鈕切換：',
+                method: '分類討論思想',
+                pool: ['0', '2', '4', '5', '6', '8'],
+                poolNote: '偶數：{0, 2, 4, 6, 8} 共 5 個 ｜ 奇數：{5} 共 1 個',
+                cases: [
+                    {
+                        name: '分類一：個位是 0（60個）',
+                        slots: [
+                            { pos: '千位', step: 2, val: '5 種', cands: '2, 4, 5, 6, 8', note: '第2步：0已在個位，千位無限制！剩5選1' },
+                            { pos: '百位', step: 2, val: '4 種', cands: '剩餘4數', note: '第2步：從剩餘4數選1個' },
+                            { pos: '十位', step: 2, val: '3 種', cands: '剩餘3數', note: '第2步：從剩餘3數選1個' },
+                            { pos: '個位 (鎖定0)', step: 1, val: '1 種', cands: '0', note: '第1步：將 0 固定放在個位（1種）' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '分類一（第1步）：個位固定為 0', text: `若這個偶數的個位數是 0，個位只有 1 種排法，且徹底解除了千位不能為 0 的警報！` },
+                            { s: 2, title: '分類一（第2步）：千、百、十位從剩餘 5 數選 3 排列', text: `從 <code class="num-badge">2, 4, 5, 6, 8</code> 五個數中任選 3 個排在前三位，有 ${symA(5,3)} = 5 × 4 × 3 = 60 個。` }
+                        ],
+                        formula: `第一類(${symA(5,3)} = 60) ＋ 第二類(${symC(4,1)}${symC(4,1)}${symA(4,2)} = 192) = <span style="color:var(--rose)">252</span> 個`
+                    },
+                    {
+                        name: '分類二：個位不是 0（192個）',
+                        slots: [
+                            { pos: '千位 (避開0)', step: 2, val: '4 種', cands: '非0且非個位', note: '第2步：扣除個位偶數與0，千位剩4種選擇' },
+                            { pos: '百位', step: 3, val: '4 種', cands: '0 + 剩餘3數', note: '第3步：0解禁！與剩餘3數共4選1' },
+                            { pos: '十位', step: 3, val: '3 種', cands: '剩餘3數', note: '第3步：剩餘3數選1個' },
+                            { pos: '個位 (非0偶數)', step: 1, val: '4 種', cands: '2, 4, 6, 8', note: '第1步：從非零偶數 {2,4,6,8} 選1個' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '分類二（第1步）：先排個位（非零偶數）', text: `個位不是 0，只能從 <code class="num-badge">2, 4, 6, 8</code> 四個偶數選 1 個，有 ${symC(4,1)} = 4 種。` },
+                            { s: 2, title: '分類二（第2步）：再排千位（避開 0）', text: `千位不能放 0 且不能與個位重複，故有 ${symC(4,1)} = 4 種。` },
+                            { s: 3, title: '分類二（第3步）：百位與十位排列', text: `剩餘 4 個數（含 0）選 2 個排在百位與十位，有 ${symA(4,2)} = 12 種。本類共 4 × 4 × 12 = 192 個。` }
+                        ],
+                        formula: `第一類(60) ＋ 第二類(${symC(4,1)}${symC(4,1)}${symA(4,2)} = 192) = <span style="color:var(--rose)">252</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const last = ['0', '2', '4', '6', '8'][Math.floor(Math.random() * 5)];
+                    const rem = ['0', '2', '4', '5', '6', '8'].filter(d => d !== last);
+                    const firstChoices = rem.filter(d => d !== '0');
+                    const first = firstChoices[Math.floor(Math.random() * firstChoices.length)];
+                    const mid = rem.filter(d => d !== first).sort(() => Math.random() - 0.5);
+                    const tag = last === '0' ? '【分類一：個位是0】' : '【分類二：個位非0】';
+                    return { num: first + mid[0] + mid[1] + last, desc: `${tag} 個位=${last}，千位=${first}，百十位=${mid[0]}${mid[1]}` };
+                }
+            },
+            {
+                btnTitle: '(4) 圓周率 3,1,4,1,5,9 兩1不相鄰 (240個)',
+                source: '第4講・題型三【例2】',
+                title: '將圓周率前 6 位數字 3, 1, 4, 1, 5, 9 排列設置密碼，要求兩個 1 不相鄰，共有幾個？',
+                desc: '典型插空法！先排其餘 4 個相異數字 {3, 4, 5, 9}，形成 5 個空隙（含頭尾），再選 2 個空隙放入兩個相同的 1。',
+                method: '插空法 + 相同元素組合',
+                pool: ['3', '4', '5', '9', '1', '1'],
+                poolNote: '4 個相異主位數字 {3,4,5,9} ＋ 2 個相同的插空數字 {1,1}',
+                cases: [
+                    {
+                        name: '4個主位 + 5個插空位',
+                        slots: [
+                            { pos: '主位排 {3,4,5,9}', step: 1, val: '24 種', cands: 'A(4,4) 全排', note: '第1步：將 3,4,5,9 四個相異數字全排列，共 4! = 24 種' },
+                            { pos: '產生 5 個空隙', step: 2, val: '5 空位', cands: '_ X _ X _ X _ X _', note: '第2步：4個數字之間連同頭尾兩端，共產生 5 個可插空位' },
+                            { pos: '選 2 空隙插兩個 1', step: 2, val: '10 種', cands: 'C(5,2) 選2空', note: '第2步：兩個 1 相同無順序，從 5 個空隙選 2 個放入，有 10 種' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：先排其餘 4 個數字 {3, 4, 5, 9}', text: `將沒有不相鄰限制的 3, 4, 5, 9 全排列，有 ${symA(4,4)} = 24 種排法。` },
+                            { s: 2, title: '第二步：在 5 個空隙中選 2 個插入兩個相同的 1', text: `4 個數字形成 <code class="num-badge">_ X _ X _ X _ X _</code> 共 5 個空隙，選 2 個空隙放入兩個相同的 1，有 ${symC(5,2)} = 10 種。共 24 × 10 = 240 個。` }
+                        ],
+                        formula: `${symA(4,4)} × ${symC(5,2)} = 24 × 10 = <span style="color:var(--emerald)">240</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const main = ['3', '4', '5', '9'].sort(() => Math.random() - 0.5);
+                    const gaps = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5).slice(0, 2);
+                    const out = [];
+                    for (let i = 0; i < 4; i++) {
+                        if (gaps.includes(i)) out.push('1');
+                        out.push(main[i]);
+                    }
+                    if (gaps.includes(4)) out.push('1');
+                    return { num: out.join(''), desc: `主位排 ${main.join('')}，兩個 1 插入第 ${gaps.map(g => g + 1).sort().join(' 與 ')} 號空隙` };
+                }
+            },
+            {
+                btnTitle: '(5) 2,0,2,5,4,2,3 排七位數 (720個)',
+                source: '專題09・題型七第33題',
+                title: '將 2, 0, 2, 5, 4, 2, 3 這七個數字排成一排組成一個七位數，不同的七位數共有幾個？',
+                desc: '這 7 個數字中「2」重複出現了 3 次，且含有 1 個不能排首位的「0」。利用「全部消序排列 (840) － 首位為0消序排列 (120)」秒解！',
+                method: '定序倍縮（消序法）',
+                pool: ['2', '0', '2', '5', '4', '2', '3'],
+                poolNote: '數字 2 出現 3 次（須除以 3! = 6 消序），且首位不可為 0',
+                cases: [
+                    {
+                        name: '總消序排列 － 首位為0',
+                        slots: [
+                            { pos: '① 7數無限制消序', step: 1, val: '840 種', cands: 'A(7,7) / A(3,3)', note: '第1步：7個數含三個2，全部排列數為 5040 ÷ 6 = 840 種' },
+                            { pos: '② 扣除首位為 0', step: 2, val: '－120 種', cands: 'A(6,6) / A(3,3)', note: '第2步：當首位為0時，後六位含三個2有 720 ÷ 6 = 120 種' },
+                            { pos: '③ 合法七位數', step: 2, val: '720 個', cands: '840 － 120', note: '第2步：相減即得首位不為0的不同七位數共 720 個' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：求 7 個數字的無限制全排列（消去三個 2 的順序）', text: `數字 2 出現了 3 次，7 個數字的所有排列情況有 ${symFrac(symA(7,7), symA(3,3))} = ${symFrac('5040', '6')} = 840 種。` },
+                            { s: 2, title: '第二步：排除「首位為 0」的不合情況', text: `當首位固定為 0 時，剩下 6 個數字 <code class="num-badge">2, 2, 5, 4, 2, 3</code> 中仍有三個 2，排列情況有 ${symFrac(symA(6,6), symA(3,3))} = 120 種。故有 840 － 120 = 720 個。` }
+                        ],
+                        formula: `${symFrac(symA(7,7), symA(3,3))} － ${symFrac(symA(6,6), symA(3,3))} = 840 － 120 = <span style="color:var(--amber)">720</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const arr = ['2', '0', '2', '5', '4', '2', '3'];
+                    do {
+                        arr.sort(() => Math.random() - 0.5);
+                    } while (arr[0] === '0');
+                    return { num: arr.join(''), desc: `首位為非零數 ${arr[0]}，且三個相同的 2 已消除內部順序` };
+                }
+            },
+            {
+                btnTitle: '(6) 0,0,0,1,1,2,2,7 三個0不相鄰 (300個)',
+                source: '第4講・題型八【專練5】',
+                title: '把三個 0、兩個 2、兩個 1 與一個 7 組成一個八位數，若其中三個 0 均不相鄰，共有幾個？',
+                desc: '結合「消序法」與「首位不為 0 的插空法」！先排 5 個非零數 {2,2,1,1,7}，再將三個 0 插入後方的 5 個空隙中。',
+                method: '消序法 + 限制首位插空',
+                pool: ['0', '0', '0', '1', '1', '2', '2', '7'],
+                poolNote: '非零數 5 個：{2,2,1,1,7} ｜ 不相鄰且不可排首位：{0,0,0}',
+                cases: [
+                    {
+                        name: '先排非0消序 ➔ 後5空選3',
+                        slots: [
+                            { pos: '排非零 {2,2,1,1,7}', step: 1, val: '30 種', cands: '5! / (2!2!)', note: '第1步：兩個2、兩個1、一個7消序排列，有 120 ÷ 4 = 30 種' },
+                            { pos: '排除最左首位空隙', step: 2, val: '5 個合法空', cands: 'X _ X _ X _ X _ X _', note: '第2步：八位數首位不能為0，故第1個數字左方不可插0' },
+                            { pos: '插入三個相同的 0', step: 2, val: '10 種', cands: 'C(5,3) 選3空', note: '第2步：從後面 5 個空隙選 3 個放入 0，有 C(5,3) = 10 種' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：排列 5 個非零數字（兩個 2、兩個 1、一個 7）', text: `利用相同元素消序法，共有 ${symFrac(symA(5,5), symA(2,2) + symA(2,2))} = ${symFrac('120', '2 × 2')} = 30 種排法。` },
+                            { s: 2, title: '第二步：把三個 0 插入後方 5 個空隙（避開首位）', text: `5 個非零數排好後（記為 X），最左端不能放 0，只能在 <code class="num-badge">X _ X _ X _ X _ X _</code> 的 5 個空隙中選 3 個放 0，有 ${symC(5,3)} = 10 種。共 30 × 10 = 300 個。` }
+                        ],
+                        formula: `${symFrac(symA(5,5), symA(2,2) + symA(2,2))} × ${symC(5,3)} = 30 × 10 = <span style="color:var(--primary)">300</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const nz = ['2', '2', '1', '1', '7'].sort(() => Math.random() - 0.5);
+                    const gaps = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5).slice(0, 3);
+                    const res = [];
+                    for (let i = 0; i < 5; i++) {
+                        res.push(nz[i]);
+                        if (gaps.includes(i)) res.push('0');
+                    }
+                    return { num: res.join(''), desc: `先排非零數 ${nz.join('')}，再於後方空隙插入三個不相鄰的 0` };
+                }
+            },
+            {
+                btnTitle: '(7) 1~5 三奇數僅兩個相鄰 (72個)',
+                source: '第4講・題型七【例1】',
+                title: '用 1, 2, 3, 4, 5 組成沒有重複數字的五位數，三個奇數中「僅有兩個相鄰」的五位數有幾個？',
+                desc: '正難則反經典題！「僅有兩個奇數相鄰」的對立面是「三個奇數全部相鄰 (36個)」或「三個奇數全部不相鄰 (12個)」。用總數 120 減去這兩類即可！',
+                method: '正難則反（間接法）',
+                pool: ['1', '2', '3', '4', '5'],
+                poolNote: '三個奇數：{1, 3, 5} ｜ 兩個偶數：{2, 4}',
+                cases: [
+                    {
+                        name: '正難則反：總數 － 全相鄰 － 全不相鄰',
+                        slots: [
+                            { pos: '① 五位數總數', step: 1, val: '120 個', cands: 'A(5,5) 全排', note: '第1步：1~5無限制全排列，共有 5! = 120 個五位數' },
+                            { pos: '② 扣三奇數全相鄰', step: 2, val: '－36 個', cands: 'A(3,3) × A(3,3)', note: '第2步：將 {1,3,5} 捆綁成一體與 {2,4} 全排，有 6×6 = 36 個' },
+                            { pos: '③ 扣三奇數全不相鄰', step: 3, val: '－12 個', cands: 'A(2,2) × A(3,3)', note: '第3步：先排 {2,4} 有2種，3個空隙插 {1,3,5} 有6種，共 12 個' },
+                            { pos: '④ 僅兩奇數相鄰', step: 3, val: '72 個', cands: '120 - 36 - 12', note: '第3步：由間接法得 120 － 36 － 12 = 72 個' }
+                        ],
+                        stepsExp: [
+                            { s: 1, title: '第一步：先求 1, 2, 3, 4, 5 組成五位數的總個數', text: `5 個相異非零數字全排列，共有 ${symA(5,5)} = 120 個。` },
+                            { s: 2, title: '第二步：求反面情況一「三個奇數都相鄰（捆綁法）」', text: `把三個奇數 {1,3,5} 看成一個整體，與偶數 2 和 4 全排列，共有 ${symA(3,3)} × ${symA(3,3)} = 6 × 6 = 36 個。` },
+                            { s: 3, title: '第三步：求反面情況二「三個奇數都不相鄰（插空法）」並相減', text: `先排偶數 2 和 4 有 ${symA(2,2)} = 2 種，把三個奇數插入形成的 3 個空隙有 ${symA(3,3)} = 6 種，共 2 × 6 = 12 個。<br>故符合條件的有 <strong>120 － 36 － 12 = 72</strong> 個。` }
+                        ],
+                        formula: `${symA(5,5)} － ${symA(3,3)}${symA(3,3)} － ${symA(2,2)}${symA(3,3)} = 120 － 36 － 12 = <span style="color:var(--purple)">72</span> 個`
+                    }
+                ],
+                sampleGen: () => {
+                    const arr = ['1', '2', '3', '4', '5'];
+                    while (true) {
+                        arr.sort(() => Math.random() - 0.5);
+                        const pattern = arr.map(x => (['1', '3', '5'].includes(x) ? 'O' : 'E')).join('');
+                        if (pattern.includes('OO') && !pattern.includes('OOO')) {
+                            return { num: arr.join(''), desc: `奇偶結構為 ${pattern}（恰有兩個奇數相鄰，第三個奇數分開）` };
+                        }
+                    }
+                }
+            }
+        ];
+
+        let curLabIdx = 0;
+        let curLabCaseIdx = 0;
+        let curLabStep = 1;
+
+        function renderLabScenarioButtons() {
+            const grid = document.getElementById('lab-scenario-grid');
+            grid.innerHTML = labScenariosData.map((item, idx) => `
+                <button type="button" onclick="selectLabScenario(${idx})" class="scenario-btn ${idx === curLabIdx ? 'active' : ''}">
+                    ${item.btnTitle}
+                </button>
+            `).join('');
+        }
+
+        function selectLabScenario(idx) {
+            curLabIdx = idx;
+            curLabCaseIdx = 0;
+            curLabStep = 1;
+            renderLabScenarioButtons();
+            renderLabStage();
+            generateLabSample();
+        }
+
+        function selectLabCase(cIdx) {
+            curLabCaseIdx = cIdx;
+            curLabStep = 1;
+            renderLabStage();
+        }
+
+        function renderLabStage() {
+            const scen = labScenariosData[curLabIdx];
+            const curCase = scen.cases[curLabCaseIdx];
+            const maxStep = Math.max(...curCase.stepsExp.map(x => x.s));
+
+            document.getElementById('lab-source-badge').textContent = scen.source;
+            document.getElementById('lab-question-title').textContent = scen.title;
+            document.getElementById('lab-question-desc').textContent = scen.desc;
+            document.getElementById('lab-method-tag').textContent = scen.method;
+            document.getElementById('lab-pool-note').textContent = scen.poolNote;
+            document.getElementById('lab-step-badge').textContent = `推導進度：第 ${curLabStep} / ${maxStep} 步`;
+
+            document.getElementById('btn-lab-prev').disabled = curLabStep <= 1;
+            document.getElementById('btn-lab-next').disabled = curLabStep >= maxStep;
+
+            // 分類切換列
+            const caseBar = document.getElementById('lab-case-bar');
+            if (scen.cases.length > 1) {
+                caseBar.style.display = 'flex';
+                caseBar.innerHTML = `<strong style="color:#fde68a;">🔀 點擊切換分類情況：</strong>` +
+                    scen.cases.map((c, i) => `
+                        <button type="button" onclick="selectLabCase(${i})" class="ctrl-btn ${i === curLabCaseIdx ? 'ctrl-btn-amber' : 'ctrl-btn-secondary'}" style="padding:0.4rem 0.9rem; font-size:0.92rem;">
+                            ${c.name}
+                        </button>
+                    `).join('');
+            } else {
+                caseBar.style.display = 'none';
+            }
+
+            // 數字池
+            const poolEl = document.getElementById('lab-digit-pool');
+            poolEl.innerHTML = scen.pool.map(d => `
+                <div class="digit-ball ${d === '0' ? 'zero-ball' : ''}">
+                    <span>${d}</span>
+                    ${d === '0' ? '<span style="font-size:0.75rem; font-family:sans-serif; background:#e11d48; color:#fff; padding:0.1rem 0.45rem; border-radius:999px;">特殊0</span>' : ''}
+                </div>
+            `).join('');
+
+            // 數位格子
+            const stageEl = document.getElementById('lab-slots-stage');
+            stageEl.innerHTML = curCase.slots.map(slot => {
+                const isCur = slot.step === curLabStep;
+                const isDone = slot.step < curLabStep;
+                const stateClass = isCur ? 'current-step' : (isDone ? 'done-step' : '');
+                return `
+                    <div onclick="jumpLabStep(${slot.step})" class="slot-box ${stateClass}">
+                        <div class="slot-top">
+                            <span>${slot.pos}</span>
+                            <span class="slot-step-tag">步驟 ${slot.step}</span>
+                        </div>
+                        <div>
+                            <div class="slot-main-val">${isCur || isDone ? slot.val : '? 種'}</div>
+                            <div class="slot-candidates">[${slot.cands}]</div>
+                        </div>
+                        <div class="slot-note">${slot.note}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // 分步詳解
+            const stepsListEl = document.getElementById('lab-steps-list');
+            stepsListEl.innerHTML = curCase.stepsExp.map(st => {
+                const isCur = st.s === curLabStep;
+                const isDone = st.s < curLabStep;
+                return `
+                    <div onclick="jumpLabStep(${st.s})" class="step-exp-card ${isCur ? 'active' : (isDone ? 'done' : '')}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                            <strong style="font-size:1.05rem;">${st.title}</strong>
+                            ${isCur ? '<span class="q-num-badge" style="font-size:0.8rem;">目前步驟</span>' : (isDone ? '<span style="color:var(--emerald); font-weight:900;">✔ 已完成</span>' : '')}
+                        </div>
+                        <p>${st.text}</p>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('lab-formula-box').innerHTML = curCase.formula;
+        }
+
+        function jumpLabStep(s) {
+            curLabStep = s;
+            renderLabStage();
+        }
+        function labStepPrev() {
+            if (curLabStep > 1) {
+                curLabStep--;
+                renderLabStage();
+            }
+        }
+        function labStepNext() {
+            const scen = labScenariosData[curLabIdx];
+            const curCase = scen.cases[curLabCaseIdx];
+            const maxStep = Math.max(...curCase.stepsExp.map(x => x.s));
+            if (curLabStep < maxStep) {
+                curLabStep++;
+                renderLabStage();
+            }
+        }
+        function labStepAll() {
+            const scen = labScenariosData[curLabIdx];
+            const curCase = scen.cases[curLabCaseIdx];
+            curLabStep = Math.max(...curCase.stepsExp.map(x => x.s));
+            renderLabStage();
+        }
+        function labStepReset() {
+            curLabStep = 1;
+            renderLabStage();
+        }
+        function generateLabSample() {
+            const sample = labScenariosData[curLabIdx].sampleGen();
+            document.getElementById('lab-sample-display').innerHTML = `
+                <span class="sample-number-badge">${sample.num}</span>
+                <span style="font-weight:700; color:#e2e8f0;">${sample.desc}</span>
+            `;
+        }
+
+        // =========================================================================
+        // 5. 模組三：眼見為憑「真實數字全枚舉驗證器」與排列組合計算機
+        // =========================================================================
+        function drawCountingRodDigit(d) {
+            // 中國古代算籌表示法（1~5 為橫棍，6~9 為上1豎棍下橫棍）
+            if (d <= 5) {
+                let bars = '';
+                for (let i = 0; i < d; i++) bars += '<div class="rod-bar-h"></div>';
+                return `<div class="rod-glyph">${bars}</div>`;
+            } else {
+                let bars = '<div class="rod-bar-v"></div>';
+                for (let i = 0; i < d - 5; i++) bars += '<div class="rod-bar-h"></div>';
+                return `<div class="rod-glyph">${bars}</div>`;
+            }
+        }
+
+        function selectEnumPreset(type) {
+            ['odd36', 'mult20', 'rods16', 'perm24', 'barcode10'].forEach(id => {
+                const btn = document.getElementById('ebtn-' + id);
+                if (btn) btn.classList.toggle('active', id === type);
+            });
+
+            const headerBox = document.getElementById('enum-header-box');
+            const stageBox = document.getElementById('enum-stage-box');
+
+            if (type === 'odd36') {
+                const odds = [];
+                const digs = ['0', '1', '2', '3', '4'];
+                for (let a of digs) {
+                    if (a === '0') continue;
+                    for (let b of digs) {
+                        if (b === a) continue;
+                        for (let c of digs) {
+                            if (c === a || c === b) continue;
+                            for (let d of digs) {
+                                if (d === a || d === b || d === c) continue;
+                                for (let e of digs) {
+                                    if (e === a || e === b || e === c || e === d) continue;
+                                    if (e === '1' || e === '3') odds.push(a + b + c + d + e);
+                                }
+                            }
+                        }
+                    }
+                }
+                headerBox.innerHTML = `
+                    <strong>✅ 【講義例4(4)】0, 1, 2, 3, 4 組成的全部 ${odds.length} 個無重複五位奇數：</strong><br>
+                    <span>公式驗證：個位奇數 ${symC(2,1)} × 萬位非零 ${symC(3,1)} × 中間三位 ${symA(3,3)} = <strong>2 × 3 × 6 = 36</strong> 個（金色為萬位、翠綠色為個位奇數 1 或 3）：</span>
+                `;
+                stageBox.innerHTML = `<div class="enum-items-wrap">` + odds.map((n, i) => `
+                    <div class="enum-num-chip">
+                        <div style="font-size:0.72rem; color:#94a3b8;">#${i + 1}</div>
+                        <div><span style="color:#fbbf24">${n[0]}</span>${n.slice(1, 4)}<span style="color:#34d399">${n[4]}</span></div>
+                    </div>
+                `).join('') + `</div>`;
+            } else if (type === 'mult20') {
+                const groups = [
+                    { label: '數位和為 3：{0, 1, 2}（0不可排百位，共 4 個）', nums: ['102', '120', '201', '210'] },
+                    { label: '數位和為 6：{0, 2, 4}（0不可排百位，共 4 個）', nums: ['204', '240', '402', '420'] },
+                    { label: '數位和為 6：{1, 2, 3}（全排列 A(3,3)，共 6 個）', nums: ['123', '132', '213', '231', '312', '321'] },
+                    { label: '數位和為 9：{2, 3, 4}（全排列 A(3,3)，共 6 個）', nums: ['234', '243', '324', '342', '423', '432'] }
+                ];
+                headerBox.innerHTML = `
+                    <strong>✅ 【講義例4(3)】0, 1, 2, 3, 4 組成的全部 20 個「無重複三位 3 的倍數」：</strong><br>
+                    <span>關鍵定理：一個數是 3 的倍數 ⇔ <strong>各位數字之和是 3 的倍數</strong>。分成以下 4 組相加：4 + 4 + 6 + 6 = <strong>20</strong> 個。</span>
+                `;
+                stageBox.innerHTML = groups.map(g => `
+                    <div style="margin-bottom:1.15rem;">
+                        <div style="font-weight:900; color:#fde68a; margin-bottom:0.5rem;">📌 ${g.label}</div>
+                        <div class="enum-items-wrap">
+                            ${g.nums.map(n => `<div class="enum-num-chip" style="color:#34d399;">${n}</div>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            } else if (type === 'rods16') {
+                const rodCost = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 2, 7: 3, 8: 4, 9: 5 };
+                const pairs = [];
+                for (let tens = 1; tens <= 9; tens++) {
+                    for (let ones = 1; ones <= 9; ones++) {
+                        if (rodCost[tens] + rodCost[ones] === 6) {
+                            pairs.push({ num: tens * 10 + ones, t: tens, o: ones, ct: rodCost[tens], co: rodCost[ones] });
+                        }
+                    }
+                }
+                headerBox.innerHTML = `
+                    <strong>✅ 【講義題型二例2】用 6 根算籌（不剩餘）表示 1~9 組成的全部 ${pairs.length} 個兩位數：</strong><br>
+                    <span>注意：數字 6 只用 2 根算籌（1豎1橫）、7 用 3 根、8 用 4 根、9 用 5 根！組合 {15,19,24,28,64,68,37} 各排 2 個 + {33,77} 各 1 個 = <strong>16</strong> 個。</span>
+                `;
+                stageBox.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(175px, 1fr)); gap:0.85rem;">` +
+                    pairs.map((p, i) => `
+                        <div class="rod-card">
+                            <div style="font-weight:900; font-size:1.25rem; color:#34d399;">#${i + 1}：兩位數 ${p.num}</div>
+                            <div class="rod-digits-pair">
+                                ${drawCountingRodDigit(p.t)}
+                                ${drawCountingRodDigit(p.o)}
+                            </div>
+                            <div style="font-size:0.82rem; color:#cbd5e1;">十位(${p.ct}根) + 個位(${p.co}根) = 6根</div>
+                        </div>
+                    `).join('') + `</div>`;
+            } else if (type === 'perm24') {
+                const res = [];
+                const d = ['1', '2', '3', '4'];
+                for (let a of d) for (let b of d) if (b !== a) for (let c of d) if (c !== a && c !== b) for (let e of d) if (e !== a && e !== b && e !== c) res.push(a + b + c + e);
+                headerBox.innerHTML = `
+                    <strong>✅ 【專題09第8題】由 1, 2, 3, 4 組成沒有重複數字的全部 ${res.length} 個四位數：</strong><br>
+                    <span>公式驗證：4 個非零相異數字全排列 ${symA(4,4)} = 4 × 3 × 2 × 1 = <strong>24</strong> 個。</span>
+                `;
+                stageBox.innerHTML = `<div class="enum-items-wrap">` + res.map((n, i) => `
+                    <div class="enum-num-chip"><span style="font-size:0.75rem; color:#94a3b8; display:block;">#${i + 1}</span>${n}</div>
+                `).join('') + `</div>`;
+            } else if (type === 'barcode10') {
+                const codes = [];
+                for (let i = 0; i < 5; i++) {
+                    for (let j = i + 1; j < 5; j++) {
+                        const pattern = ['窄', '窄', '窄', '窄', '窄'];
+                        pattern[i] = '寬';
+                        pattern[j] = '寬';
+                        codes.push({ idx1: i + 1, idx2: j + 1, arr: pattern });
+                    }
+                }
+                headerBox.innerHTML = `
+                    <strong>✅ 【講義題型八例2】「標準 25 碼」由 2 個相同寬條、3 個相同窄條組成的全部 10 種編碼：</strong><br>
+                    <span>相同元素消序排列：${symFrac(symA(5,5), symA(2,2) + symA(3,3))} = ${symC(5,2)} = <strong>10</strong> 種。</span>
+                `;
+                stageBox.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(195px, 1fr)); gap:0.85rem;">` +
+                    codes.map((c, idx) => `
+                        <div class="barcode-card">
+                            <div style="font-weight:900; color:#fde68a;">編碼 #${idx + 1}（寬條在第 ${c.idx1},${c.idx2} 位）</div>
+                            <div class="barcode-visual">
+                                ${c.arr.map(item => item === '寬' ? '<div class="bar-wide" title="寬條"></div>' : '<div class="bar-narrow" title="窄條"></div>').join('')}
+                            </div>
+                            <div style="font-family:monospace; font-size:0.9rem; color:#34d399;">[${c.arr.join('・')}]</div>
+                        </div>
+                    `).join('') + `</div>`;
+            }
+        }
+
+        function updateFormulaCalculator() {
+            let n = parseInt(document.getElementById('calc-input-n').value, 10) || 1;
+            let m = parseInt(document.getElementById('calc-input-m').value, 10) || 0;
+            if (n < 1) n = 1;
+            if (n > 12) n = 12;
+            if (m < 0) m = 0;
+            if (m > n) m = n;
+
+            document.getElementById('calc-input-n').value = n;
+            document.getElementById('calc-input-m').value = m;
+
+            const terms = [];
+            for (let i = 0; i < m; i++) terms.push(n - i);
+            const prodStr = m === 0 ? '1' : terms.join(' × ');
+            const mFactTerms = [];
+            for (let i = m; i >= 1; i--) mFactTerms.push(i);
+            const mFactStr = m <= 1 ? '1' : mFactTerms.join(' × ');
+
+            const aRes = valA(n, m);
+            const cRes = valC(n, m);
+
+            document.getElementById('calculator-result-area').innerHTML = `
+                <div class="info-panel" style="background-color:var(--bg-accent-soft); border-color:var(--primary);">
+                    <div class="info-panel-title">1. 排列數（講究順序：選出來還要排位置）</div>
+                    <div style="font-size:1.25rem; font-weight:900; margin:0.5rem 0;">
+                        ${symA(n, m)} = ${prodStr} = <span style="color:var(--primary); font-size:1.45rem;">${aRes.toLocaleString()}</span>
+                    </div>
+                    <p style="font-size:0.92rem; color:var(--text-secondary);">意義：從 ${n} 個不同數字中取出 ${m} 個排在 ${m} 個數位上，共有 ${aRes.toLocaleString()} 種排法。</p>
+                </div>
+
+                <div class="info-panel" style="background-color:var(--bg-emerald-soft); border-color:var(--emerald);">
+                    <div class="info-panel-title" style="color:var(--emerald);">2. 組合數（不講順序：除以 ${m}! 消去內部順序）</div>
+                    <div style="font-size:1.25rem; font-weight:900; margin:0.5rem 0;">
+                        ${symC(n, m)} = ${symFrac(symA(n, m), symA(m, m))} = ${symFrac(prodStr, mFactStr)} = <span style="color:var(--emerald); font-size:1.45rem;">${cRes.toLocaleString()}</span>
+                    </div>
+                    <p style="font-size:0.92rem; color:var(--text-secondary);">對稱性質驗證：${symC(n, m)} = ${symC(n, n - m)} = ${cRes.toLocaleString()}</p>
+                </div>
+            `;
+        }
+
+        // =========================================================================
+        // 6. 模組四：教材真題闖關題庫（精選 15 道講義原題）
+        // =========================================================================
+        const quizQuestionsData = [
+            {
+                id: 'q1',
+                cat: 'special',
+                source: '第4講・題型一【例4(2)】',
+                stars: '★★☆',
+                stem: '用 0, 1, 2, 3, 4 五個數字，可組成多少個「無重複數字」的五位數？（　）',
+                options: ['120 個', '96 個', '72 個', '2500 個'],
+                ans: 1,
+                hint: '萬位不能放 0，先從 1, 2, 3, 4 四個數中選 1 個放在萬位，再把剩下的 3 個數與 0 全排列。',
+                explanation: `先從 1, 2, 3, 4 四個非零數字中抽取 1 個放在萬位，有 ${symC(4,1)} = 4 種情況；再把剩下的 3 個數字和 0 共 4 個數字在後四位全排列，有 ${symA(4,4)} = 24 種情況。故可組成 ${symC(4,1)} × ${symA(4,4)} = 4 × 24 = <strong>96</strong> 個無重複數字的五位數。`
+            },
+            {
+                id: 'q2',
+                cat: 'special',
+                source: '第4講・題型一【例4(4)】',
+                stars: '★★★',
+                stem: '用 0, 1, 2, 3, 4 五個數字，可組成多少個「無重複數字」的五位奇數？（　）',
+                options: ['48 個', '40 個', '36 個', '24 個'],
+                ans: 2,
+                hint: '五位奇數的個位只能是 1 或 3！遵循「先排個位 ➔ 再排萬位（避開 0）➔ 最後排中間三位」。',
+                explanation: `放在個位的數字只能是奇數 1 或 3，先從 {1, 3} 抽 1 個放在個位，有 ${symC(2,1)} = 2 種情況；再從剩下的 4 個數字中除去 0 抽取 1 個放在萬位，有 ${symC(3,1)} = 3 種情況；最後對剩下的 3 個數字全排列，有 ${symA(3,3)} = 6 種情況。共可組成 ${symC(2,1)} × ${symC(3,1)} × ${symA(3,3)} = 2 × 3 × 6 = <strong>36</strong> 個。`
+            },
+            {
+                id: 'q3',
+                cat: 'special',
+                source: '第4講・題型一【例4(3)】',
+                stars: '★★★',
+                stem: '用 0, 1, 2, 3, 4 五個數字，可組成多少個「無重複數字且是 3 的倍數」的三位數？（　）',
+                options: ['18 個', '20 個', '24 個', '30 個'],
+                ans: 1,
+                hint: '3 的倍數的三位數，其三個數字之和必須是 3 的倍數！先找出和為 3 的倍數的 4 組三數組合：{0,1,2}、{0,2,4}、{1,2,3}、{2,3,4}。',
+                explanation: `三個數字之和必須是 3 的倍數，故只能是：<br>① <strong>{0, 1, 2}</strong> 或 <strong>{0, 2, 4}</strong>：0 不能放百位，各有 ${symC(2,1)} × ${symA(2,2)} = 4 個；<br>② <strong>{1, 2, 3}</strong> 或 <strong>{2, 3, 4}</strong>：無 0 直接全排列，各有 ${symA(3,3)} = 6 個。<br>根據分類加法計數原理，共可組成 4 + 4 + 6 + 6 = <strong>20</strong> 個。`
+            },
+            {
+                id: 'q4',
+                cat: 'special',
+                source: '第4講・題型一【題型專練4】',
+                stars: '★★★',
+                stem: '用 0, 2, 4, 5, 6, 8 組成無重複數字的四位數，則這樣的四位數中「偶數」共有（　）',
+                options: ['120 個', '192 個', '252 個', '300 個'],
+                ans: 2,
+                hint: '根據偶數的個位數是否為 0 分兩類討論：① 個位是 0；② 個位不是 0（即個位為 2,4,6,8）。',
+                explanation: `分兩類討論：<br>① 若這個偶數的<strong>個位數是 0</strong>，則前三位有 ${symA(5,3)} = 60 個；<br>② 若這個偶數的<strong>個位數不是 0</strong>，個位從 {2,4,6,8} 選 1，千位避開 0，則有 ${symC(4,1)}${symC(4,1)}${symA(4,2)} = 4 × 4 × 12 = 192 個。<br>故四位偶數總個數為 60 + 192 = <strong>252</strong> 個。`
+            },
+            {
+                id: 'q5',
+                cat: 'special',
+                source: '第4講・題型二【例2】中國古代算籌計數法',
+                stars: '★★★',
+                stem: '中國古代十進制算籌計數法中，數 1~5 分別用 1~5 根橫算籌表示，6~9 分別用「1根豎算籌配 1~4 根橫算籌」表示（即 6 用 2 根、7 用 3 根、8 用 4 根、9 用 5 根）。現有 6 根算籌且不能剩餘，則可以用 1~9 這 9 個數字表示兩位數的個數為（　）',
+                options: ['12 個', '14 個', '16 個', '18 個'],
+                ans: 2,
+                hint: '先找出十位與個位算籌數相加等於 6 根的所有數字組合：15, 19, 24, 28, 64, 68, 37 以及十位個位相同的 33, 77。',
+                explanation: `6 根算籌可以表示的數字組合為：15, 19, 24, 28, 64, 68, 37 以及 33, 77。<br>• 組合 15, 19, 24, 28, 64, 68, 37 共 7 組，每組可交換排成 2 個兩位數，共 2 × 7 = 14 個；<br>• 組合 33, 77 共 2 組，每組只能表示 1 個兩位數，共 2 個。<br>總共可以表示 14 + 2 = <strong>16</strong> 個兩位數。`
+            },
+            {
+                id: 'q6',
+                cat: 'special',
+                source: '第4講・題型二【例3】3×3 方格填數',
+                stars: '★★☆',
+                stem: '將 1, 2, 3 填入 3 × 3 的九宮格方格中，要求每行、每列都沒有重複數字，則不同的填寫方法共有（　）',
+                options: ['6 種', '12 種', '24 種', '48 種'],
+                ans: 1,
+                hint: '只需先填好第一行（3個數全排）和第一列剩下的兩個位置（2個數全排），其餘四格就會唯一確定！',
+                explanation: `先填第一行的 3 個方格，有 ${symA(3,3)} = 6 種填法；再填第一列剩下的 2 個方格，有 ${symA(2,2)} = 2 種填法。當第一行與第一列填好後，其餘位置的數字即唯一確定，故共有 ${symA(3,3)}${symA(2,2)} = 6 × 2 = <strong>12</strong> 種。`
+            },
+            {
+                id: 'q7',
+                cat: 'gap',
+                source: '第4講・題型三【例2】祖沖之圓周率密碼',
+                stars: '★★★',
+                stem: '小明在設置手機的數字密碼時，打算將圓周率「祖率」的前 6 位數字 3, 1, 4, 1, 5, 9 進行某種排列得到密碼。如果排列時要求「兩個 1 不相鄰」，那麼小明可以設置的不同密碼有（　）個',
+                options: ['240 個', '360 個', '600 個', '720 個'],
+                ans: 0,
+                hint: '先排 {3, 4, 5, 9} 四個不同數字，產生 5 個空隙，再選出 2 個空隙放入兩個相同的 1（注意相同元素用 C）。',
+                explanation: `利用插空法：先排 3, 4, 5, 9 有 ${symA(4,4)} = 24 種；再於產生的 5 個空隙中選 2 個放入兩個相同的 1，有 ${symC(5,2)} = 10 種。共有 ${symA(4,4)} × ${symC(5,2)} = 24 × 10 = <strong>240</strong> 個。`
+            },
+            {
+                id: 'q8',
+                cat: 'gap',
+                source: '第4講・題型八【題型專練4】二進制代碼',
+                stars: '★★☆',
+                stem: '由數字 0, 1 組成的一串 10 位數字代碼，其中恰好有 7 個 1、3 個 0，則這樣的不同數字代碼共有（　）個',
+                options: ['60 個', '100 個', '120 個', '720 個'],
+                ans: 2,
+                hint: '10 個位置中選 3 個位置放 0（其餘放 1），或用相同元素消序公式 10! / (7! × 3!)。',
+                explanation: `一共 10 個數字，其中 7 個相同的 1、3 個相同的 0，由相同元素消序法可得共有 ${symFrac(symA(10,10), symA(7,7) + symA(3,3))} = ${symC(10,3)} = <strong>120</strong> 個。`
+            },
+            {
+                id: 'q9',
+                cat: 'gap',
+                source: '專題09・題型七第33題（四川廣元期末）',
+                stars: '★★★',
+                stem: '將 2, 0, 2, 5, 4, 2, 3 這些數字排成一排組成一個七位數，則不同的七位數有（　）個',
+                options: ['480 個', '600 個', '720 個', '840 個'],
+                ans: 2,
+                hint: '數字 2 出現了 3 次！用「7 個數消序全排列」減去「首位固定為 0 時剩下 6 個數的消序全排列」。',
+                explanation: `數字 2, 0, 2, 5, 4, 2, 3 中數字 2 出現了 3 次，7 個數字的所有排列情況有 ${symFrac(symA(7,7), symA(3,3))} = 840 種；當首位為 0 時，剩下 6 個數字中 2 仍出現 3 次，排列情況有 ${symFrac(symA(6,6), symA(3,3))} = 120 種。故不同的七位數有 840 － 120 = <strong>720</strong> 個。`
+            },
+            {
+                id: 'q10',
+                cat: 'gap',
+                source: '第4講・題型八【題型專練5】',
+                stars: '★★★★',
+                stem: '某數學興趣小組把三個 0、兩個 2、兩個 1 與一個 7 組成一個八位數（如 20001217），若其中「三個 0 均不相鄰」，則這個八位數的個數為（　）',
+                options: ['200 個', '240 個', '300 個', '600 個'],
+                ans: 2,
+                hint: '第一步先排兩個 2、兩個 1、一個 7（注意消去兩個 2 與兩個 1 的順序）；第二步把三個 0 插入後面 5 個空隙（最左邊首位空隙不能放 0）。',
+                explanation: `第一步：排列兩個 2、兩個 1、一個 7，共有 ${symFrac(symA(5,5), symA(2,2) + symA(2,2))} = 30 種排法；<br>第二步：把三個 0 插入後面 5 個空隙（首位不能為 0），有 ${symC(5,3)} = 10 種排法。<br>所以共有 30 × 10 = <strong>300</strong> 個八位數。`
+            },
+            {
+                id: 'q11',
+                cat: 'indirect',
+                source: '第4講・題型七【例1】',
+                stars: '★★★',
+                stem: '用 1, 2, 3, 4, 5 組成一個沒有重複數字的五位數，三個奇數中「僅有兩個相鄰」的五位數有（　）個',
+                options: ['48 個', '60 個', '72 個', '84 個'],
+                ans: 2,
+                hint: '正難則反！用五位數總數 120 減去「三個奇數全相鄰(36)」與「三個奇數全不相鄰(12)」。',
+                explanation: `無重複五位數共有 ${symA(5,5)} = 120 個。其對立面是「三個奇數都相鄰」或「三個奇數都不相鄰」：<br>• 三個奇數都相鄰：${symA(3,3)} × ${symA(3,3)} = 36 個；<br>• 三個奇數都不相鄰：${symA(2,2)} × ${symA(3,3)} = 12 個。<br>故符合條件的有 120 － 36 － 12 = <strong>72</strong> 個。`
+            },
+            {
+                id: 'q12',
+                cat: 'indirect',
+                source: '第4講・題型七【題型專練4】容斥原理壓軸題',
+                stars: '★★★★',
+                stem: '用 1, 2, 3, 4, 5, 0 組成數字不重複的六位數，滿足「1 和 2 不相鄰」且「5 和 0 不相鄰」，則這樣的六位數的個數為（　）',
+                options: ['240 個', '264 個', '276 個', '312 個'],
+                ans: 2,
+                hint: '利用容斥原理：六位數總數(600) － [1,2相鄰(192)] － [5,0相鄰(216)] ＋ [1,2相鄰且5,0相鄰(84)]。',
+                explanation: `• 六位數總個數：${symA(6,6)} － ${symA(5,5)} = 600 個；<br>• 1, 2 相鄰的六位數：${symA(5,5)}${symA(2,2)} － ${symA(4,4)}${symA(2,2)} = 192 個；<br>• 5, 0 相鄰的六位數：${symA(5,5)}${symA(2,2)} － ${symA(4,4)} = 216 個；<br>• 1, 2 相鄰且 5, 0 相鄰的六位數：${symA(4,4)}${symA(2,2)}${symA(2,2)} － ${symA(3,3)}${symA(2,2)} = 84 個。<br>由容斥原理得：600 － 192 － 216 ＋ 84 = <strong>276</strong> 個。`
+            },
+            {
+                id: 'q13',
+                cat: 'indirect',
+                source: '第4講・題型七【例4】對數去重問題',
+                stars: '★★★',
+                stem: '從 2, 4, 6, 8, 10 這五個數中，每次取出兩個不同的數分別為 a, b，共可得到 lg a － lg b 的不同值的個數是（　）',
+                options: ['20 個', '18 個', '10 個', '9 個'],
+                ans: 1,
+                hint: 'lg a － lg b = lg(a/b)！先算任取兩數排列 A(5,2) = 20，再扣掉分式比值相等的重複情況（2/4 = 4/8 與 4/2 = 8/4）。',
+                explanation: `因為 lg a － lg b = lg(a/b)，從五個數中任取兩個不同的數排列共有 ${symA(5,2)} = 20 種。但其中 2/4 = 4/8 且 4/2 = 8/4 有 2 組重複，故不同值的個數是 20 － 2 = <strong>18</strong> 個。`
+            },
+            {
+                id: 'q14',
+                cat: 'indirect',
+                source: '第4講・題型一【題型專練3】雙面卡片含重複1',
+                stars: '★★★★',
+                stem: '4 張卡片的正、反面分別寫有數字 (1,2)、(1,3)、(4,5)、(6,7)。將這 4 張卡片排成一排，可構成不同的四位數的個數為（　）',
+                options: ['288 個', '336 個', '368 個', '412 個'],
+                ans: 1,
+                hint: '前兩張卡片都有 1！分成「不出現 1 (96)」、「出現一個 1 (192)」、「出現兩個 1 (48)」三類相加。',
+                explanation: `分成三種情況：<br>① 四位數<strong>不出現 1</strong>（前兩張選 2,3）：${symC(2,1)} × ${symC(2,1)} × ${symA(4,4)} = 96 種；<br>② 四位數<strong>出現一個 1</strong>：2 × ${symC(2,1)} × ${symC(2,1)} × ${symA(4,4)} = 192 種；<br>③ 四位數<strong>出現兩個 1</strong>（前兩張都選 1，需消序）：${symC(2,1)} × ${symC(2,1)} × ${symA(4,2)} = 48 種。<br>共有 96 + 192 + 48 = <strong>336</strong> 個。`
+            },
+            {
+                id: 'q15',
+                cat: 'indirect',
+                source: '專題09・題型六第28題（山東濰坊月考）',
+                stars: '★★☆',
+                stem: '三元一次方程 x + y + z = 8 的正整數解 (x, y, z) 的組數為（　）',
+                options: ['21 組', '28 組', '35 組', '42 組'],
+                ans: 0,
+                hint: '正整數解代表 x ≥ 1, y ≥ 1, z ≥ 1，等價於將 8 個相同球分成 3 組（每組至少 1 個），在 7 個空隙插 2 塊隔板！',
+                explanation: `將三元一次方程 x + y + z = 8 的正整數解組數轉化為「將 8 個相同小球分成 3 組，每組至少 1 個」，只需在 8 個小球中間的 7 個空位選 2 個插入隔板，共有 ${symC(7,2)} = <strong>21</strong> 組。`
+            }
+        ];
+
+        let quizUserAnswers = {};
+        let quizHintShown = {};
+        let currentQuizFilter = 'all';
+
+        function renderQuizModule() {
+            // 更新篩選按鈕狀態與錯題計數
+            const wrongIds = Object.keys(quizUserAnswers).filter(qid => {
+                const q = quizQuestionsData.find(item => item.id === qid);
+                return q && quizUserAnswers[qid] !== q.ans;
+            });
+
+            document.getElementById('filter-btn-wrong').textContent = `📕 錯題重練 (${wrongIds.length})`;
+
+            document.querySelectorAll('#quiz-filter-bar .filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-qfilter') === currentQuizFilter);
+            });
+
+            const filtered = quizQuestionsData.filter(q => {
+                if (currentQuizFilter === 'all') return true;
+                if (currentQuizFilter === 'wrong') return wrongIds.includes(q.id);
+                return q.cat === currentQuizFilter;
+            });
+
+            const container = document.getElementById('quiz-questions-container');
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="surface-card" style="text-align:center; padding:3rem;">
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">🎉</div>
+                        <h4 style="font-size:1.35rem; font-weight:900;">目前此分類沒有待重練的錯題！</h4>
+                        <p style="color:var(--text-secondary); margin-top:0.4rem;">請點擊上方「全部真題 (15)」繼續挑戰其他題目。</p>
+                    </div>
+                `;
+            } else {
+                const letters = ['A', 'B', 'C', 'D'];
+                container.innerHTML = filtered.map((q, idx) => {
+                    const userAns = quizUserAnswers[q.id];
+                    const isAnswered = userAns !== undefined;
+                    const isCorrect = isAnswered && userAns === q.ans;
+                    const cardState = !isAnswered ? '' : (isCorrect ? 'correct-card' : 'wrong-card');
+                    const qIndexNum = quizQuestionsData.findIndex(item => item.id === q.id) + 1;
+
+                    return `
+                        <div class="question-card ${cardState}">
+                            <div class="q-meta-row">
+                                <div class="q-tag-group">
+                                    <span class="q-num-badge">第 ${qIndexNum} 題</span>
+                                    <span class="q-source-badge">${q.source}</span>
+                                    <span class="q-stars" title="難度星級">${q.stars}</span>
+                                </div>
+                                <div>
+                                    <button type="button" onclick="toggleQuizHint('${q.id}')" class="ctrl-btn" style="background-color:var(--bg-amber-soft); color:var(--amber); border:1.5px solid var(--amber); padding:0.35rem 0.85rem; font-size:0.9rem;">
+                                        💡 查看破題提示
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="q-stem">${q.stem}</div>
+
+                            <div class="options-grid">
+                                ${q.options.map((optText, optIdx) => {
+                                    let optClass = '';
+                                    if (isAnswered) {
+                                        if (optIdx === q.ans) optClass = 'opt-correct';
+                                        else if (optIdx === userAns && userAns !== q.ans) optClass = 'opt-wrong';
+                                    }
+                                    return `
+                                        <button type="button" onclick="submitQuizAnswer('${q.id}', ${optIdx})" class="option-btn ${optClass}">
+                                            <span class="opt-letter">${letters[optIdx]}</span>
+                                            <span>${optText}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <div id="hint-box-${q.id}" class="q-Hint-box ${quizHintShown[q.id] ? 'show' : ''}">
+                                <strong>🔑 破題關鍵提示：</strong> ${q.hint}
+                            </div>
+
+                            <div class="q-solution-box ${isAnswered ? 'show' : ''}">
+                                <div style="font-weight:900; font-size:1.08rem; margin-bottom:0.4rem; color:${isCorrect ? 'var(--emerald)' : 'var(--rose)'};">
+                                    ${isCorrect ? '🎉 答對了！觀念非常紮實！' : `❌ 答錯囉！正確答案為 (${letters[q.ans]})，請看下方完整分步詳解：`}
+                                </div>
+                                <div><strong>📖 講義完整詳解：</strong><br>${q.explanation}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 更新頂部進度條
+            const answeredCount = Object.keys(quizUserAnswers).length;
+            const correctCount = Object.keys(quizUserAnswers).filter(qid => {
+                const q = quizQuestionsData.find(item => item.id === qid);
+                return q && quizUserAnswers[qid] === q.ans;
+            }).length;
+
+            document.getElementById('quiz-progress-label').textContent = `闖關進度：${answeredCount} / 15 題（答對 ${correctCount} 題）`;
+            document.getElementById('quiz-progress-bar').style.width = `${Math.round((answeredCount / 15) * 100)}%`;
+        }
+
+        function toggleQuizHint(qid) {
+            quizHintShown[qid] = !quizHintShown[qid];
+            const el = document.getElementById('hint-box-' + qid);
+            if (el) el.classList.toggle('show', quizHintShown[qid]);
+        }
+
+        function submitQuizAnswer(qid, optIdx) {
+            quizUserAnswers[qid] = optIdx;
+            try {
+                localStorage.setItem('perm_lab_quiz', JSON.stringify(quizUserAnswers));
+            } catch (e) {}
+            renderQuizModule();
+        }
+
+        function setQuizFilter(filterName) {
+            currentQuizFilter = filterName;
+            renderQuizModule();
+        }
+
+        function resetAllQuiz() {
+            quizUserAnswers = {};
+            quizHintShown = {};
+            currentQuizFilter = 'all';
+            try {
+                localStorage.removeItem('perm_lab_quiz');
+            } catch (e) {}
+            renderQuizModule();
+        }
+
+        // =========================================================================
+        // 7. 頁面初始化
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const savedSize = localStorage.getItem('perm_lab_fontsize');
+                const savedBtn = localStorage.getItem('perm_lab_fontbtn');
+                if (savedSize && savedBtn) changeFontSize(parseInt(savedSize, 10), savedBtn);
+
+                const savedDark = localStorage.getItem('perm_lab_dark');
+                if (savedDark === '1') {
+                    document.documentElement.classList.add('dark');
+                    document.getElementById('theme-toggle-btn').textContent = '☀️ 淺色護眼';
+                }
+
+                const savedQuiz = localStorage.getItem('perm_lab_quiz');
+                if (savedQuiz) quizUserAnswers = JSON.parse(savedQuiz);
+            } catch (e) {}
+
+            renderStrategiesModule();
+            renderLabScenarioButtons();
+            renderLabStage();
+            generateLabSample();
+            selectEnumPreset('odd36');
+            updateFormulaCalculator();
+            renderQuizModule();
+        });
+    </script>
+</body>
+</html>
